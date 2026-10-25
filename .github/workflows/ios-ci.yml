@@ -89,7 +89,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            build 2>&1 | tee build.log || (echo "=== XCODEBUILD FAILED LOG ===" && cat build.log | tail -n 120 && exit 1)
 
       - name: Execute iOS Unit Tests on Simulator
         run: |
@@ -99,7 +99,7 @@ jobs:
             -destination "id=$SIM_ID" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee test.log || (echo "=== XCODEBUILD TEST FAILED LOG ===" && cat test.log | tail -n 120 && exit 1)
 
       - name: Package Simulator App for Web & Virtual Testing (Appetize.io / Simulator)
         run: |

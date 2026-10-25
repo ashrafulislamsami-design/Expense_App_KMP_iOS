@@ -42,7 +42,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		AA0100002CC0000000000001 /* ExpenseTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpenseTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0100002CC000000000000F /* ExpenseTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpenseTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0100012CC0000000000001 /* ExpenseTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseTrackerApp.swift; sourceTree = "<group>"; };
 		AA0100022CC0000000000001 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		AA0100032CC0000000000001 /* SpacingAndShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingAndShapes.swift; sourceTree = "<group>"; };
@@ -65,7 +65,7 @@
 		AA0100142CC0000000000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AA0100152CC0000000000001 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
 		AA0100162CC0000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA0200002CC0000000000001 /* ExpenseTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpenseTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0200002CC000000000000F /* ExpenseTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpenseTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0200012CC0000000000001 /* ExpenseTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseTrackerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -100,8 +100,8 @@
 		AA0000022CC0000000000001 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA0100002CC0000000000001 /* ExpenseTracker.app */,
-				AA0200002CC0000000000001 /* ExpenseTrackerTests.xctest */,
+				AA0100002CC000000000000F /* ExpenseTracker.app */,
+				AA0200002CC000000000000F /* ExpenseTrackerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -200,7 +200,7 @@
 			);
 			name = ExpenseTracker;
 			productName = ExpenseTracker;
-			productReference = AA0100002CC0000000000001 /* ExpenseTracker.app */;
+			productReference = AA0100002CC000000000000F /* ExpenseTracker.app */;
 			productType = "com.apple.product-type.application";
 		};
 		AA0200002CC0000000000001 /* ExpenseTrackerTests */ = {
@@ -217,7 +217,7 @@
 			);
 			name = ExpenseTrackerTests;
 			productName = ExpenseTrackerTests;
-			productReference = AA0200002CC0000000000001 /* ExpenseTrackerTests.xctest */;
+			productReference = AA0200002CC000000000000F /* ExpenseTrackerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
