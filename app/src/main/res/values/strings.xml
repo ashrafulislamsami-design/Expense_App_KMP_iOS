@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Expense &amp; Salary Tracker</string>
+
+    <!-- Notification Channels -->
+    <string name="notification_channel_daily_reminder_name">Daily Reminders</string>
+    <string name="notification_channel_daily_reminder_desc">Daily reminders to record expenses and review today\'s spending</string>
+    <string name="notification_channel_budget_alerts_name">Budget Alerts</string>
+    <string name="notification_channel_budget_alerts_desc">Alerts when spending approaches or exceeds budget limits</string>
+    <string name="notification_channel_goal_updates_name">Goal Milestones</string>
+    <string name="notification_channel_goal_updates_desc">Updates and celebrations for savings goals and milestones</string>
+
+    <!-- Daily Reminder Notification -->
+    <string name="daily_reminder_title">Daily Expense Reminder</string>
+    <string name="daily_reminder_body">Have you entered today\'s expenses?</string>
+    <string name="daily_reminder_public_title">Daily Expense Reminder</string>
+    <string name="daily_reminder_public_body">Tap to open Expense Tracker</string>
+    <string name="daily_reminder_action_add">Add Expense</string>
+    <string name="daily_reminder_action_view_report">View Today\'s Report</string>
+    <string name="daily_reminder_action_dismiss">Dismiss</string>
+
+    <!-- Budget Alerts -->
+    <string name="budget_alert_warning_title">Budget Warning</string>
+    <string name="budget_alert_warning_body">You have used %1$d%% of your %2$s budget.</string>
+    <string name="budget_alert_exceeded_title">Budget Exceeded</string>
+    <string name="budget_alert_exceeded_body">Your %1$s budget limit has been exceeded.</string>
+    <string name="budget_alert_public_title">Budget Alert</string>
+    <string name="budget_alert_public_body">A budget threshold was reached. Tap to view.</string>
+    <string name="budget_alert_action_view">View Budgets</string>
+
+    <!-- Goal Alerts -->
+    <string name="goal_milestone_title">Milestone Reached! 🎉</string>
+    <string name="goal_milestone_body">You\'ve reached %1$d%% of your goal for %2$s!</string>
+    <string name="goal_milestone_public_title">Goal Update</string>
+    <string name="goal_milestone_public_body">A goal milestone was reached.</string>
+    <string name="goal_action_view">View Goal</string>
+</resources>
