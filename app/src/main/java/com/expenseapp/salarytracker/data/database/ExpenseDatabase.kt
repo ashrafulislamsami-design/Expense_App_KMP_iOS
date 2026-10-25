@@ -70,6 +70,20 @@ abstract class ExpenseDatabase : RoomDatabase() {
                 )
             }
             catDao.insertAll(defaultCategoryEntities)
+        } else {
+            val existingNames = catDao.getAllCategoryNames().toSet()
+            val missing = Category.DEFAULT_CATEGORIES.filter { it.name !in existingNames }
+            if (missing.isNotEmpty()) {
+                val missingEntities = missing.map {
+                    CategoryEntity(
+                        name = it.name,
+                        iconName = it.iconName,
+                        colorHex = it.colorHex,
+                        sortOrder = it.sortOrder
+                    )
+                }
+                catDao.insertAll(missingEntities)
+            }
         }
 
         val accDao = accountDao()

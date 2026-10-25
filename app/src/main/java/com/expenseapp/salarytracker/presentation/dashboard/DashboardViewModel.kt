@@ -83,6 +83,9 @@ data class DashboardUiState(
     val categoriesMap: Map<Long, Category> = emptyMap(),
     val accountsMap: Map<Long, Account> = emptyMap(),
     val topSpendingCategories: List<CategorySpend> = emptyList(),
+    val topIncomeCategories: List<CategorySpend> = emptyList(),
+    val topDebtCategories: List<CategorySpend> = emptyList(),
+    val totalDebtFlow: MinorUnits = MinorUnits.ZERO,
     val dailyTrend: List<DailyTrendPoint> = emptyList(),
     val current7DaySpend: MinorUnits = MinorUnits.ZERO,
     val previous7DaySpend: MinorUnits = MinorUnits.ZERO,
@@ -159,44 +162,41 @@ class DashboardViewModel(
         // Determine active date window and previous comparison date window based on selected timeframe
         val (activeStart, activeEnd, prevStart, prevEnd) = when (timeframe) {
             DashboardTimeframe.CURRENT_CYCLE -> {
-                val prevWindow = cycleCalculator.calculateWindow(cycleWindow.startDate.minusDays(1), config)
-                listOf(cycleWindow.startDate, cycleWindow.endDate, prevWindow.startDate, prevWindow.endDate)
+                val cycleDays = java.time.temporal.ChronoUnit.DAYS.between(cycleWindow.startDate, cycleWindow.endDate) + 1
+                listOf(
+                    cycleWindow.startDate,
+                    cycleWindow.endDate,
+                    cycleWindow.startDate.minusDays(cycleDays),
+                    cycleWindow.startDate.minusDays(1)
+                )
             }
             DashboardTimeframe.THIS_MONTH -> {
-                val start = today.withDayOfMonth(1)
-                val end = today.withDayOfMonth(today.lengthOfMonth())
-                val prevMonth = today.minusMonths(1)
-                val pStart = prevMonth.withDayOfMonth(1)
-                val pEnd = prevMonth.withDayOfMonth(prevMonth.lengthOfMonth())
-                listOf(start, end, pStart, pEnd)
+                val firstOfMonth = today.withDayOfMonth(1)
+                val lastOfMonth = today.withDayOfMonth(today.lengthOfMonth())
+                val prevFirst = firstOfMonth.minusMonths(1)
+                val prevLast = firstOfMonth.minusDays(1)
+                listOf(firstOfMonth, lastOfMonth, prevFirst, prevLast)
             }
             DashboardTimeframe.LAST_7_DAYS -> {
-                val start = today.minusDays(6)
-                val end = today
-                val pStart = today.minusDays(13)
-                val pEnd = today.minusDays(7)
-                listOf(start, end, pStart, pEnd)
+                listOf(today.minusDays(6), today, today.minusDays(13), today.minusDays(7))
             }
             DashboardTimeframe.LAST_30_DAYS -> {
-                val start = today.minusDays(29)
-                val end = today
-                val pStart = today.minusDays(59)
-                val pEnd = today.minusDays(30)
-                listOf(start, end, pStart, pEnd)
+                listOf(today.minusDays(29), today, today.minusDays(59), today.minusDays(30))
             }
         }
 
-        val dateFmt = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-        val periodLabel = "${activeStart.format(dateFmt)} – ${activeEnd.format(dateFmt)}"
+        val periodFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+        val periodLabel = "${activeStart.format(periodFormatter)} – ${activeEnd.format(periodFormatter)}"
 
+        // Filter transactions strictly within active and previous periods
         val periodTx = allTx.filter { !it.date.isBefore(activeStart) && !it.date.isAfter(activeEnd) }
         val prevPeriodTx = allTx.filter { !it.date.isBefore(prevStart) && !it.date.isAfter(prevEnd) }
+        val cycleTx = allTx.filter { !it.date.isBefore(cycleWindow.startDate) && !it.date.isAfter(cycleWindow.endDate) }
 
+        // Core Financial Summaries
         val summary = calculationEngine.calculateSummary(periodTx)
         val prevSummary = calculationEngine.calculateSummary(prevPeriodTx)
 
-        // Cycle transactions specifically for Safe-to-Spend & Cycle Budgets
-        val cycleTx = allTx.filter { cycleWindow.contains(it.date) }
         val safeEstimate = calculationEngine.calculateSafeToSpend(
             window = cycleWindow,
             currentDate = today,
@@ -308,6 +308,65 @@ class DashboardViewModel(
             emptyList()
         }
 
+        // Income Category Breakdown
+        val incomeTx = periodTx.filter { it.type == TransactionType.INCOME }
+        val totalIncomeUnits = incomeTx.sumOf { it.amount.amountInMinorUnits }
+        val topIncomeCategories = if (totalIncomeUnits > 0L) {
+            val list = mutableListOf<CategorySpend>()
+            val groupedByCat = incomeTx.groupBy { it.categoryId }
+            for ((catId, txList) in groupedByCat) {
+                val sum = txList.fold(MinorUnits.ZERO) { acc, tx -> acc + tx.amount }
+                if (!sum.isPositive()) continue
+                val cat = if (catId != null) categoryMap[catId] else null
+                val pct = ((sum.amountInMinorUnits.toDouble() / totalIncomeUnits.toDouble()) * 100.0).toInt().coerceIn(1, 100)
+                list.add(
+                    CategorySpend(
+                        categoryId = catId,
+                        name = cat?.name ?: "General Income",
+                        colorHex = cat?.colorHex ?: "#10B981",
+                        iconName = cat?.iconName ?: "payments",
+                        amount = sum,
+                        percentage = pct,
+                        transactionCount = txList.size
+                    )
+                )
+            }
+            list.sortedByDescending { it.amount.amountInMinorUnits }.take(6)
+        } else {
+            emptyList()
+        }
+
+        // Debt & Loan Category Breakdown
+        val debtTx = periodTx.filter { it.type == TransactionType.DEBT_RECEIVED || it.type == TransactionType.DEBT_PAYMENT }
+        val totalDebtUnits = debtTx.sumOf { it.amount.amountInMinorUnits }
+        val topDebtCategories = if (totalDebtUnits > 0L) {
+            val list = mutableListOf<CategorySpend>()
+            val groupedByCat = debtTx.groupBy { it.categoryId }
+            for ((catId, txList) in groupedByCat) {
+                val sum = txList.fold(MinorUnits.ZERO) { acc, tx -> acc + tx.amount }
+                if (!sum.isPositive()) continue
+                val cat = if (catId != null) categoryMap[catId] else null
+                val firstType = txList.first().type
+                val defaultName = if (firstType == TransactionType.DEBT_RECEIVED) "Debt Received" else "Debt Repayment"
+                val defaultColor = if (firstType == TransactionType.DEBT_RECEIVED) "#E11D48" else "#F97316"
+                val pct = ((sum.amountInMinorUnits.toDouble() / totalDebtUnits.toDouble()) * 100.0).toInt().coerceIn(1, 100)
+                list.add(
+                    CategorySpend(
+                        categoryId = catId,
+                        name = cat?.name ?: defaultName,
+                        colorHex = cat?.colorHex ?: defaultColor,
+                        iconName = cat?.iconName ?: "credit_card",
+                        amount = sum,
+                        percentage = pct,
+                        transactionCount = txList.size
+                    )
+                )
+            }
+            list.sortedByDescending { it.amount.amountInMinorUnits }.take(6)
+        } else {
+            emptyList()
+        }
+
         // 7-Day Daily Spending Pulse (Current 7 days vs Previous 7 days)
         val dayFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
         val dailyTrendPoints = (6 downTo 0).map { daysAgo ->
@@ -375,6 +434,9 @@ class DashboardViewModel(
             categoriesMap = categoryMap,
             accountsMap = accountsMap,
             topSpendingCategories = topCategories,
+            topIncomeCategories = topIncomeCategories,
+            topDebtCategories = topDebtCategories,
+            totalDebtFlow = MinorUnits(totalDebtUnits),
             dailyTrend = dailyTrendPoints,
             current7DaySpend = current7DayTotal,
             previous7DaySpend = previous7DayTotal,

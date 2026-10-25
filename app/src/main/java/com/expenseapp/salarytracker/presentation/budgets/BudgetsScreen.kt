@@ -1,5 +1,6 @@
 package com.expenseapp.salarytracker.presentation.budgets
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PieChart
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -715,6 +717,40 @@ fun BudgetDialog(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                val parsedInputMinor = MinorUnits.fromDecimalString(amountText.ifBlank { "0" })
+                val currentCycleSpent = existingStatus?.actualAmount ?: MinorUnits.ZERO
+                val isSettingBelowSpent = parsedInputMinor.isPositive() && currentCycleSpent.isPositive() && currentCycleSpent > parsedInputMinor
+
+                if (isSettingBelowSpent) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Warning,
+                                contentDescription = "Spending limit warning",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            val overAmount = currentCycleSpent - parsedInputMinor
+                            Text(
+                                text = "Spent this cycle (${currentCycleSpent.format(currencySymbol)}) already exceeds this limit by ${overAmount.format(currencySymbol)}. Saving will mark this budget as overspent immediately.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
                 // Warning Threshold Slider
                 Text(

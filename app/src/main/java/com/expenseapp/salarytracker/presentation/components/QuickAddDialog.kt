@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -49,6 +50,22 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VolunteerActivism
+import androidx.compose.material.icons.outlined.Apartment
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.CardGiftcard
+import androidx.compose.material.icons.outlined.DirectionsBus
+import androidx.compose.material.icons.outlined.Handshake
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -62,6 +79,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -153,6 +171,35 @@ fun QuickAddDialog(
     // Validation & Debounce state
     var validationError by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
+
+    LaunchedEffect(selectedType) {
+        val incomeNames = Category.DEFAULT_INCOME_CATEGORIES.map { it.name }.toSet()
+        val debtNames = Category.DEFAULT_DEBT_CATEGORIES.map { it.name }.toSet()
+        when (selectedType) {
+            TransactionType.INCOME -> {
+                if (selectedCategory == null || selectedCategory!!.name !in incomeNames) {
+                    selectedCategory = categories.firstOrNull { it.name in incomeNames || it.name.contains("Salary", ignoreCase = true) }
+                        ?: Category.DEFAULT_INCOME_CATEGORIES.firstOrNull()
+                }
+            }
+            TransactionType.DEBT_RECEIVED, TransactionType.DEBT_PAYMENT -> {
+                if (selectedCategory == null || selectedCategory!!.name !in debtNames) {
+                    val defaultDebtName = if (selectedType == TransactionType.DEBT_RECEIVED) "Loan Received" else "Debt Repayment"
+                    selectedCategory = categories.firstOrNull { it.name.equals(defaultDebtName, ignoreCase = true) }
+                        ?: categories.firstOrNull { it.name in debtNames }
+                        ?: Category.DEFAULT_DEBT_CATEGORIES.firstOrNull()
+                }
+            }
+            TransactionType.EXPENSE, TransactionType.REFUND -> {
+                if (selectedCategory == null || selectedCategory!!.name in incomeNames || selectedCategory!!.name in debtNames) {
+                    selectedCategory = categories.firstOrNull { it.name == "Food" }
+                        ?: categories.firstOrNull { it.name in Category.DEFAULT_EXPENSE_CATEGORIES.map { c -> c.name } }
+                        ?: Category.DEFAULT_EXPENSE_CATEGORIES.firstOrNull()
+                }
+            }
+            else -> {}
+        }
+    }
 
     val scrollState = rememberScrollState()
 
@@ -547,6 +594,7 @@ fun QuickAddDialog(
 
                         CategoryPickerSection(
                             title = "Reversal Category",
+                            selectedType = selectedType,
                             categories = categories,
                             selectedCategory = selectedCategory,
                             onCategorySelected = { selectedCategory = it }
@@ -567,7 +615,12 @@ fun QuickAddDialog(
                         val showCategory = selectedType != TransactionType.ADJUSTMENT
                         if (showCategory) {
                             CategoryPickerSection(
-                                title = if (selectedType == TransactionType.INCOME) "Income category" else "Category",
+                                title = when (selectedType) {
+                                    TransactionType.INCOME -> "Income Category"
+                                    TransactionType.DEBT_RECEIVED, TransactionType.DEBT_PAYMENT -> "Debt / Loan Category"
+                                    else -> "Spending Category"
+                                },
+                                selectedType = selectedType,
                                 categories = categories,
                                 selectedCategory = selectedCategory,
                                 onCategorySelected = { selectedCategory = it }
@@ -1039,61 +1092,118 @@ private fun CategoryPickerSection(
     title: String,
     categories: List<Category>,
     selectedCategory: Category?,
+    selectedType: TransactionType = TransactionType.EXPENSE,
     onCategorySelected: (Category) -> Unit
 ) {
+    var showAllCategories by remember { mutableStateOf(false) }
+
+    val incomeNames = remember { Category.DEFAULT_INCOME_CATEGORIES.map { it.name }.toSet() }
+    val debtNames = remember { Category.DEFAULT_DEBT_CATEGORIES.map { it.name }.toSet() }
+
+    val filteredCategories = remember(categories, selectedType, showAllCategories) {
+        val baseList = categories.ifEmpty { Category.DEFAULT_CATEGORIES }
+        if (showAllCategories) {
+            baseList
+        } else {
+            when (selectedType) {
+                TransactionType.INCOME -> {
+                    val matches = baseList.filter { cat ->
+                        cat.name in incomeNames || cat.name.contains("Income", ignoreCase = true) || cat.name.contains("Salary", ignoreCase = true)
+                    }
+                    if (matches.isNotEmpty()) matches else baseList
+                }
+                TransactionType.DEBT_RECEIVED, TransactionType.DEBT_PAYMENT -> {
+                    val matches = baseList.filter { cat ->
+                        cat.name in debtNames || cat.name.contains("Debt", ignoreCase = true) || cat.name.contains("Loan", ignoreCase = true) || cat.name.contains("Borrow", ignoreCase = true)
+                    }
+                    if (matches.isNotEmpty()) matches else baseList
+                }
+                else -> {
+                    val matches = baseList.filter { cat ->
+                        cat.name !in incomeNames && cat.name !in debtNames
+                    }
+                    if (matches.isNotEmpty()) matches else baseList
+                }
+            }
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = if (showAllCategories) "Filter to " + selectedType.displayName else "Show all categories",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable { showAllCategories = !showAllCategories }
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.height(AppSpacing.xs))
 
-        val displayCategories = if (categories.isNotEmpty()) categories else Category.DEFAULT_CATEGORIES
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
         ) {
-            displayCategories.forEach { cat ->
-                val isSelected = selectedCategory?.id == cat.id || (selectedCategory == null && cat.name == "Food")
+            filteredCategories.forEach { cat ->
+                val isSelected = selectedCategory?.id == cat.id || (selectedCategory == null && cat.name == filteredCategories.firstOrNull()?.name)
                 val (catColor, catIcon) = getCategoryVisuals(cat.name)
 
                 Box(
                     modifier = Modifier
-                        .heightIn(min = 48.dp)
-                        .clickable { onCategorySelected(cat) },
+                        .heightIn(min = 44.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isSelected) catColor.copy(alpha = 0.14f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                        )
+                        .border(
+                            width = if (isSelected) 1.5.dp else 1.dp,
+                            color = if (isSelected) catColor else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .clickable { onCategorySelected(cat) }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.small)
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            .border(
-                                1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.outlineVariant,
-                                MaterialTheme.shapes.small
-                            )
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Icon(
-                            imageVector = catIcon,
-                            contentDescription = null,
-                            tint = if (isSelected) MaterialTheme.colorScheme.primary else catColor,
-                            modifier = Modifier.size(14.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(catColor.copy(alpha = if (isSelected) 0.32f else 0.16f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = catIcon,
+                                contentDescription = null,
+                                tint = catColor,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                         Text(
                             text = cat.name,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1370,23 +1480,97 @@ private fun getTypeVisuals(type: TransactionType): Pair<Color, ImageVector> = wh
 }
 
 private fun getCategoryVisuals(categoryName: String): Pair<Color, ImageVector> = when {
+    categoryName.contains("Salary", ignoreCase = true) -> Pair(Color(0xFF10B981), Icons.Outlined.Payments)
+    categoryName.contains("Freelance", ignoreCase = true) || categoryName.contains("Consulting", ignoreCase = true) -> Pair(Color(0xFF06B6D4), Icons.Outlined.Work)
+    categoryName.contains("Business", ignoreCase = true) -> Pair(Color(0xFF3B82F6), Icons.Outlined.Business)
+    categoryName.contains("Investment", ignoreCase = true) -> Pair(Color(0xFF8B5CF6), Icons.Outlined.TrendingUp)
+    categoryName.contains("Bonus", ignoreCase = true) || categoryName.contains("Gift", ignoreCase = true) -> Pair(Color(0xFFF59E0B), Icons.Outlined.CardGiftcard)
+    categoryName.contains("Rental", ignoreCase = true) -> Pair(Color(0xFF14B8A6), Icons.Outlined.Apartment)
+    categoryName.contains("Cashback", ignoreCase = true) -> Pair(Color(0xFF059669), Icons.Outlined.Payments)
+    categoryName.contains("Income", ignoreCase = true) -> Pair(Color(0xFF16A34A), Icons.Outlined.Payments)
+
     categoryName.contains("Food", ignoreCase = true) ||
         categoryName.contains("Dining", ignoreCase = true) ||
+        categoryName.contains("Restaurant", ignoreCase = true) ||
         categoryName.contains("Lunch", ignoreCase = true) ->
-        Pair(CategoryFoodIcon, Icons.Outlined.Fastfood)
+        Pair(Color(0xFFF97316), Icons.Outlined.Fastfood)
 
     categoryName.contains("Transport", ignoreCase = true) ||
-        categoryName.contains("Fuel", ignoreCase = true) ||
+        categoryName.contains("Bus", ignoreCase = true) ||
+        categoryName.contains("Uber", ignoreCase = true) ->
+        Pair(Color(0xFF3B82F6), Icons.Outlined.DirectionsBus)
+
+    categoryName.contains("Fuel", ignoreCase = true) ||
         categoryName.contains("Gas", ignoreCase = true) ->
-        Pair(CategoryTransportIcon, Icons.Outlined.LocalGasStation)
+        Pair(Color(0xFF0284C7), Icons.Outlined.LocalGasStation)
 
-    categoryName.contains("Grocery", ignoreCase = true) ||
+    categoryName.contains("Grocer", ignoreCase = true) ||
         categoryName.contains("Market", ignoreCase = true) ->
-        Pair(CategoryGroceryIcon, Icons.Outlined.ShoppingCart)
+        Pair(Color(0xFF10B981), Icons.Outlined.ShoppingCart)
 
-    else -> Pair(CategoryDefaultIcon, Icons.AutoMirrored.Outlined.ReceiptLong)
+    categoryName.contains("Shopping", ignoreCase = true) ->
+        Pair(Color(0xFFEC4899), Icons.Outlined.ShoppingBag)
+
+    categoryName.contains("Rent", ignoreCase = true) ||
+        categoryName.contains("Housing", ignoreCase = true) ->
+        Pair(Color(0xFF8B5CF6), Icons.Outlined.Home)
+
+    categoryName.contains("Utilit", ignoreCase = true) ||
+        categoryName.contains("Electricity", ignoreCase = true) ->
+        Pair(Color(0xFFEAB308), Icons.Outlined.Bolt)
+
+    categoryName.contains("Mobile", ignoreCase = true) ||
+        categoryName.contains("Phone", ignoreCase = true) ->
+        Pair(Color(0xFF06B6D4), Icons.Outlined.PhoneAndroid)
+
+    categoryName.contains("Internet", ignoreCase = true) ||
+        categoryName.contains("Wifi", ignoreCase = true) ->
+        Pair(Color(0xFF6366F1), Icons.Outlined.Tune)
+
+    categoryName.contains("Entertainment", ignoreCase = true) ||
+        categoryName.contains("Movie", ignoreCase = true) ->
+        Pair(Color(0xFFF43F5E), Icons.Outlined.Movie)
+
+    categoryName.contains("Health", ignoreCase = true) ||
+        categoryName.contains("Medical", ignoreCase = true) ||
+        categoryName.contains("Doctor", ignoreCase = true) ->
+        Pair(Color(0xFFEF4444), Icons.Outlined.MedicalServices)
+
+    categoryName.contains("Education", ignoreCase = true) ||
+        categoryName.contains("School", ignoreCase = true) ->
+        Pair(Color(0xFF84CC16), Icons.Outlined.School)
+
+    categoryName.contains("Family", ignoreCase = true) ->
+        Pair(Color(0xFFD946EF), Icons.Outlined.People)
+
+    categoryName.contains("Donat", ignoreCase = true) ||
+        categoryName.contains("Charity", ignoreCase = true) ->
+        Pair(Color(0xFFE11D48), Icons.Outlined.VolunteerActivism)
+
+    categoryName.contains("Saving", ignoreCase = true) ->
+        Pair(Color(0xFF059669), Icons.Outlined.Savings)
+
+    categoryName.contains("Loan Received", ignoreCase = true) ->
+        Pair(Color(0xFFE11D48), Icons.Outlined.AccountBalanceWallet)
+
+    categoryName.contains("Repayment", ignoreCase = true) ->
+        Pair(Color(0xFFF97316), Icons.Outlined.CreditCard)
+
+    categoryName.contains("Borrow", ignoreCase = true) ->
+        Pair(Color(0xFF8B5CF6), Icons.Outlined.Handshake)
+
+    categoryName.contains("Advance", ignoreCase = true) ->
+        Pair(Color(0xFFDC2626), Icons.AutoMirrored.Outlined.ReceiptLong)
+
+    categoryName.contains("Loan Given", ignoreCase = true) ->
+        Pair(Color(0xFF0284C7), Icons.Outlined.Payments)
+
+    categoryName.contains("Debt", ignoreCase = true) ||
+        categoryName.contains("Loan", ignoreCase = true) ->
+        Pair(Color(0xFFDC2626), Icons.Outlined.CreditCard)
+
+    else -> Pair(Color(0xFF64748B), Icons.AutoMirrored.Outlined.ReceiptLong)
 }
-
 private fun getAccountIcon(type: AccountType): ImageVector = when (type) {
     AccountType.CASH -> Icons.Outlined.AccountBalanceWallet
     AccountType.BANK -> Icons.Outlined.AccountBalance

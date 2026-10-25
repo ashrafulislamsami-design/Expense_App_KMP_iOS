@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -973,6 +974,9 @@ private fun Step4BudgetAndAlreadySpent(
     val today = LocalDate.now()
     val isMidCycle = today.dayOfMonth != selectedPayDay
     val dateFmt = remember { DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()) }
+    val limitMinor = MinorUnits.fromDecimalString(limitInput.ifBlank { "0" })
+    val alreadySpentMinor = MinorUnits.fromDecimalString(alreadySpentInput.ifBlank { "0" })
+    val isOverBudget = hasLimit && limitMinor.isPositive() && alreadySpentMinor > limitMinor
 
     Column(
         modifier = Modifier
@@ -1041,7 +1045,7 @@ private fun Step4BudgetAndAlreadySpent(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
-                border = BorderStroke(1.5.dp, AppWarning.copy(alpha = 0.65f)),
+                border = BorderStroke(1.5.dp, if (isOverBudget) MaterialTheme.colorScheme.error else AppWarning.copy(alpha = 0.65f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1118,6 +1122,52 @@ private fun Step4BudgetAndAlreadySpent(
                                     )
                                 }
                             )
+                        }
+                    }
+
+                    if (isOverBudget) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.error),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Warning,
+                                        contentDescription = "Budget Exceeded Alert",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Budget Exceeded (Starting in Deficit)",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    val excess = alreadySpentMinor - limitMinor
+                                    Text(
+                                        text = "Already spent ($currencySymbol$alreadySpentInput) exceeds your set budget ($currencySymbol$limitInput) by ${excess.formatCompactOnboarding(currencySymbol)}. You will start this cycle in deficit.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -1249,7 +1299,18 @@ private fun Step5SummaryAndFinish(
                 if (spentMinor.isPositive()) {
                     SummaryRowItem("Already Spent This Cycle", "- ${spentMinor.formatCompactOnboarding(currencySymbol)}")
                 }
-                SummaryRowItem("Remaining Available Budget", remainingBudget.formatCompactOnboarding(currencySymbol), highlight = true)
+                val isDeficit = budgetMinor.isPositive() && spentMinor > budgetMinor
+                if (isDeficit) {
+                    val deficitAmount = spentMinor - budgetMinor
+                    SummaryRowItem(
+                        label = "Cycle Budget Status",
+                        value = "Deficit: -${deficitAmount.formatCompactOnboarding(currencySymbol)} (Exceeded)",
+                        highlight = true,
+                        isError = true
+                    )
+                } else {
+                    SummaryRowItem("Remaining Available Budget", remainingBudget.formatCompactOnboarding(currencySymbol), highlight = true)
+                }
             }
         }
 
@@ -1284,7 +1345,8 @@ private fun Step5SummaryAndFinish(
 private fun SummaryRowItem(
     label: String,
     value: String,
-    highlight: Boolean = false
+    highlight: Boolean = false,
+    isError: Boolean = false
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1302,7 +1364,7 @@ private fun SummaryRowItem(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (highlight) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (highlight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            color = if (isError) MaterialTheme.colorScheme.error else if (highlight) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1.2f)
         )

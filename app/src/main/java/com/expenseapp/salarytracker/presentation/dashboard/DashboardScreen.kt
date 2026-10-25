@@ -1,4 +1,4 @@
-package com.expenseapp.salarytracker.presentation.dashboard
+﻿package com.expenseapp.salarytracker.presentation.dashboard
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -322,8 +322,12 @@ fun DashboardScreen(
                 // 4. Category Distribution Donut Chart + Interactive Breakdown Card
                 item {
                     CategoryDonutBreakdownCard(
-                        categories = state.topSpendingCategories,
+                        spendingCategories = state.topSpendingCategories,
+                        incomeCategories = state.topIncomeCategories,
+                        debtCategories = state.topDebtCategories,
                         totalSpent = state.summary.netExpense,
+                        totalIncome = state.summary.totalIncome,
+                        totalDebt = state.totalDebtFlow,
                         remainingBudget = state.safeToSpend.remainingBudget,
                         effectiveIncome = state.effectiveIncome,
                         currencySymbol = state.currencySymbol,
@@ -1081,81 +1085,125 @@ private fun SpendingPulseChartCard(
 
 @Composable
 private fun CategoryDonutBreakdownCard(
-    categories: List<CategorySpend>,
+    spendingCategories: List<CategorySpend>,
+    incomeCategories: List<CategorySpend>,
+    debtCategories: List<CategorySpend>,
     totalSpent: MinorUnits,
+    totalIncome: MinorUnits,
+    totalDebt: MinorUnits,
     remainingBudget: MinorUnits,
     effectiveIncome: MinorUnits,
     currencySymbol: String,
     onNavigateToBudgets: () -> Unit
 ) {
-    // Always render a vibrant multi-segment Donut Ring even when 0 category expenses exist!
-    val displaySlices = remember(categories, totalSpent, remainingBudget, effectiveIncome) {
-        if (categories.isNotEmpty()) {
-            val mutable = categories.toMutableList()
-            if (remainingBudget.isPositive()) {
-                val totalPool = (totalSpent + remainingBudget).amountInMinorUnits.coerceAtLeast(1L)
-                // Re-normalize percentages across Spent Categories + Available Budget so the ring shows the full picture
-                val normalized = mutable.map { cat ->
-                    val pct = ((cat.amount.amountInMinorUnits.toDouble() / totalPool.toDouble()) * 100.0).toInt().coerceAtLeast(2)
-                    cat.copy(percentage = pct)
-                }.toMutableList()
-                val remPct = (100 - normalized.sumOf { it.percentage }).coerceAtLeast(5)
-                normalized.add(
-                    CategorySpend(
-                        categoryId = -1L,
-                        name = "Available budget",
-                        colorHex = "#10B981",
-                        iconName = "savings",
-                        amount = remainingBudget,
-                        percentage = remPct,
-                        transactionCount = 0
-                    )
-                )
-                normalized
-            } else {
-                mutable
-            }
-        } else {
-            // No expenses yet: show Budget / Salary Allocation Ring so the chart is ALWAYS rich and informative!
-            val avail = if (remainingBudget.isPositive()) remainingBudget else effectiveIncome
-            val unallocatedSavings = if (effectiveIncome > avail && avail.isPositive()) {
-                effectiveIncome - avail
-            } else {
-                MinorUnits(avail.amountInMinorUnits / 4L)
-            }
-            val availPct = if ((avail + unallocatedSavings).isPositive()) {
-                ((avail.amountInMinorUnits.toDouble() / (avail + unallocatedSavings).amountInMinorUnits.toDouble()) * 100.0).toInt().coerceIn(10, 90)
-            } else 75
+    var activeModeIndex by remember { mutableIntStateOf(0) } // 0: Spending, 1: Income, 2: Debt
 
-            listOf(
-                CategorySpend(
-                    categoryId = -1L,
-                    name = "Available budget",
-                    colorHex = "#10B981",
-                    iconName = "savings",
-                    amount = avail,
-                    percentage = availPct,
-                    transactionCount = 0
-                ),
-                CategorySpend(
-                    categoryId = -2L,
-                    name = "Savings buffer",
-                    colorHex = "#3B82F6",
-                    iconName = "payments",
-                    amount = unallocatedSavings,
-                    percentage = (100 - availPct).coerceAtLeast(10),
-                    transactionCount = 0
-                ),
-                CategorySpend(
-                    categoryId = -3L,
-                    name = "Spent so far",
-                    colorHex = "#F59E0B",
-                    iconName = "receipt",
-                    amount = totalSpent,
-                    percentage = 4,
-                    transactionCount = 0
-                )
-            )
+    val displaySlices = remember(activeModeIndex, spendingCategories, incomeCategories, debtCategories, totalSpent, totalIncome, totalDebt, remainingBudget, effectiveIncome) {
+        when (activeModeIndex) {
+            0 -> {
+                // SPENDING & BUDGET
+                if (spendingCategories.isNotEmpty()) {
+                    val mutable = spendingCategories.toMutableList()
+                    if (remainingBudget.isPositive()) {
+                        val totalPool = (totalSpent + remainingBudget).amountInMinorUnits.coerceAtLeast(1L)
+                        val normalized = mutable.map { cat ->
+                            val pct = ((cat.amount.amountInMinorUnits.toDouble() / totalPool.toDouble()) * 100.0).toInt().coerceAtLeast(2)
+                            cat.copy(percentage = pct)
+                        }.toMutableList()
+                        val remPct = (100 - normalized.sumOf { it.percentage }).coerceAtLeast(5)
+                        normalized.add(
+                            CategorySpend(
+                                categoryId = -1L,
+                                name = "Available budget",
+                                colorHex = "#10B981",
+                                iconName = "savings",
+                                amount = remainingBudget,
+                                percentage = remPct,
+                                transactionCount = 0
+                            )
+                        )
+                        normalized
+                    } else {
+                        mutable
+                    }
+                } else {
+                    val avail = if (remainingBudget.isPositive()) remainingBudget else effectiveIncome
+                    val unallocatedSavings = if (effectiveIncome > avail && avail.isPositive()) {
+                        effectiveIncome - avail
+                    } else {
+                        MinorUnits(avail.amountInMinorUnits / 4L)
+                    }
+                    val availPct = if ((avail + unallocatedSavings).isPositive()) {
+                        ((avail.amountInMinorUnits.toDouble() / (avail + unallocatedSavings).amountInMinorUnits.toDouble()) * 100.0).toInt().coerceIn(10, 90)
+                    } else 75
+
+                    listOf(
+                        CategorySpend(
+                            categoryId = -1L,
+                            name = "Available budget",
+                            colorHex = "#10B981",
+                            iconName = "savings",
+                            amount = avail,
+                            percentage = availPct,
+                            transactionCount = 0
+                        ),
+                        CategorySpend(
+                            categoryId = -2L,
+                            name = "Savings buffer",
+                            colorHex = "#3B82F6",
+                            iconName = "payments",
+                            amount = unallocatedSavings,
+                            percentage = (100 - availPct).coerceAtLeast(10),
+                            transactionCount = 0
+                        ),
+                        CategorySpend(
+                            categoryId = -3L,
+                            name = "Spent so far",
+                            colorHex = "#F59E0B",
+                            iconName = "receipt",
+                            amount = totalSpent,
+                            percentage = 4,
+                            transactionCount = 0
+                        )
+                    )
+                }
+            }
+            1 -> {
+                // INCOME
+                if (incomeCategories.isNotEmpty()) {
+                    incomeCategories
+                } else {
+                    listOf(
+                        CategorySpend(
+                            categoryId = -10L,
+                            name = "Monthly Salary",
+                            colorHex = "#10B981",
+                            iconName = "payments",
+                            amount = if (totalIncome.isPositive()) totalIncome else effectiveIncome,
+                            percentage = 100,
+                            transactionCount = 1
+                        )
+                    )
+                }
+            }
+            else -> {
+                // DEBTS & LOANS
+                if (debtCategories.isNotEmpty()) {
+                    debtCategories
+                } else {
+                    listOf(
+                        CategorySpend(
+                            categoryId = -20L,
+                            name = "No debts this cycle",
+                            colorHex = "#8B5CF6",
+                            iconName = "handshake",
+                            amount = totalDebt,
+                            percentage = 100,
+                            transactionCount = 0
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -1169,20 +1217,27 @@ private fun CategoryDonutBreakdownCard(
         elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none)
     ) {
         Column(modifier = Modifier.padding(AppSpacing.md)) {
+            // Header Row: Title & Action
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val headerTitle = when (activeModeIndex) {
+                    0 -> if (spendingCategories.isNotEmpty()) "Where money went & left" else "Cycle budget breakdown"
+                    1 -> "Income sources & inflow"
+                    else -> "Debts & loans breakdown"
+                }
+
                 Text(
-                    text = if (categories.isNotEmpty()) "Where money went & left" else "Cycle budget breakdown",
+                    text = headerTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Budgets →",
+                    text = "Budgets â†’",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
@@ -1193,7 +1248,53 @@ private fun CategoryDonutBreakdownCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 3-Pill Interactive Category View Switcher (Spending | Income | Debts)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val tabs = listOf(
+                    Triple(0, "Spending", Color(0xFFF97316)),
+                    Triple(1, "Income", Color(0xFF10B981)),
+                    Triple(2, "Debts & Loans", Color(0xFF8B5CF6))
+                )
+
+                tabs.forEach { (modeIdx, label, themeColor) ->
+                    val isSelected = activeModeIndex == modeIdx
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) themeColor.copy(alpha = 0.16f) else Color.Transparent)
+                            .border(
+                                width = if (isSelected) 1.5.dp else 0.dp,
+                                color = if (isSelected) themeColor else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable {
+                                activeModeIndex = modeIdx
+                                selectedSliceIndex = 0
+                            }
+                            .padding(vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) themeColor else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             val activeCat = displaySlices.getOrNull(selectedSliceIndex) ?: displaySlices.first()
 
@@ -1265,7 +1366,7 @@ private fun CategoryDonutBreakdownCard(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "${activeCat.percentage}%",
+                            text = "%",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = parseHexColor(activeCat.colorHex, selectedSliceIndex)
@@ -1301,10 +1402,18 @@ private fun CategoryDonutBreakdownCard(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(9.dp)
+                                        .size(18.dp)
                                         .clip(CircleShape)
-                                        .background(dotColor)
-                                )
+                                        .background(dotColor.copy(alpha = if (isSelected) 0.3f else 0.16f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(dotColor)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = item.name,
@@ -1327,7 +1436,7 @@ private fun CategoryDonutBreakdownCard(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "${item.percentage}%",
+                                    text = "%",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1340,8 +1449,7 @@ private fun CategoryDonutBreakdownCard(
     }
 }
 
-// =============================================================================
-//  5. BUDGET HEALTH & TREE OF HOPE GLANCE ROW
+// =============================================================================//  5. BUDGET HEALTH & TREE OF HOPE GLANCE ROW
 // =============================================================================
 
 @Composable

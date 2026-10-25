@@ -312,7 +312,27 @@ struct OnboardingFlowView: View {
             .padding()
             .background(AppColors.surface(for: colorScheme))
             .clipShape(AppShapes.medium)
-            .overlay(AppShapes.medium.stroke(Color.appWarning.opacity(0.5), lineWidth: 1))
+            .overlay(AppShapes.medium.stroke((Double(monthlyBudget) ?? 0) > 0 && (Double(alreadySpentThisCycle) ?? 0) > (Double(monthlyBudget) ?? 0) ? Color.red : Color.appWarning.opacity(0.5), lineWidth: 1))
+            
+            if let bVal = Double(monthlyBudget), let sVal = Double(alreadySpentThisCycle), bVal > 0, sVal > bVal {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.white)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Budget Exceeded (Starting in Deficit)")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        Text("Already spent exceeds limit by ৳\(Int(sVal - bVal)).")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                    Spacer()
+                }
+                .padding(12)
+                .background(Color.red.opacity(0.85))
+                .clipShape(AppShapes.medium)
+            }
             
             Spacer()
             
@@ -347,6 +367,9 @@ struct OnboardingFlowView: View {
                 summaryRow(label: "Monthly Income", value: "৳\(monthlyIncome)")
                 summaryRow(label: "Payday", value: "\(selectedPayDay)\(ordinal(selectedPayDay)) of every month")
                 summaryRow(label: "Budget Limit", value: "৳\(monthlyBudget)")
+                if let bVal = Double(monthlyBudget), let sVal = Double(alreadySpentThisCycle), bVal > 0, sVal > bVal {
+                    summaryRow(label: "Budget Deficit", value: "-৳\(Int(sVal - bVal)) (Exceeded)")
+                }
                 if !alreadySpentThisCycle.isEmpty {
                     summaryRow(label: "Already Spent", value: "-৳\(alreadySpentThisCycle)")
                 }

@@ -10,9 +10,9 @@ data class Category(
     val sortOrder: Int = 0
 ) {
     companion object {
-        val DEFAULT_CATEGORIES = listOf(
-            Category(name = "Transport", iconName = "directions_bus", colorHex = "#3B82F6", sortOrder = 1),
-            Category(name = "Food", iconName = "restaurant", colorHex = "#F59E0B", sortOrder = 2),
+        val DEFAULT_EXPENSE_CATEGORIES = listOf(
+            Category(name = "Food", iconName = "restaurant", colorHex = "#F59E0B", sortOrder = 1),
+            Category(name = "Transport", iconName = "directions_bus", colorHex = "#3B82F6", sortOrder = 2),
             Category(name = "Groceries", iconName = "shopping_cart", colorHex = "#10B981", sortOrder = 3),
             Category(name = "Rent", iconName = "home", colorHex = "#8B5CF6", sortOrder = 4),
             Category(name = "Utilities", iconName = "bolt", colorHex = "#EF4444", sortOrder = 5),
@@ -26,9 +26,32 @@ data class Category(
             Category(name = "Family", iconName = "diversity_1", colorHex = "#D946EF", sortOrder = 13),
             Category(name = "Donation", iconName = "volunteer_activism", colorHex = "#E11D48", sortOrder = 14),
             Category(name = "Savings", iconName = "savings", colorHex = "#059669", sortOrder = 15),
-            Category(name = "Debt", iconName = "credit_card", colorHex = "#DC2626", sortOrder = 16),
-            Category(name = "Salary / Income", iconName = "payments", colorHex = "#16A34A", sortOrder = 17),
-            Category(name = "Other", iconName = "more_horiz", colorHex = "#94A3B8", sortOrder = 18)
+            Category(name = "Other Expense", iconName = "more_horiz", colorHex = "#94A3B8", sortOrder = 16)
+        )
+
+        val DEFAULT_INCOME_CATEGORIES = listOf(
+            Category(name = "Salary", iconName = "payments", colorHex = "#10B981", sortOrder = 17),
+            Category(name = "Consulting / Freelance", iconName = "work", colorHex = "#06B6D4", sortOrder = 18),
+            Category(name = "Business", iconName = "business", colorHex = "#3B82F6", sortOrder = 19),
+            Category(name = "Investments", iconName = "trending_up", colorHex = "#8B5CF6", sortOrder = 20),
+            Category(name = "Bonus / Gift", iconName = "card_giftcard", colorHex = "#F59E0B", sortOrder = 21),
+            Category(name = "Rental Income", iconName = "real_estate_agent", colorHex = "#14B8A6", sortOrder = 22),
+            Category(name = "Cashback / Refund", iconName = "currency_exchange", colorHex = "#059669", sortOrder = 23),
+            Category(name = "Other Income", iconName = "payments", colorHex = "#16A34A", sortOrder = 24)
+        )
+
+        val DEFAULT_DEBT_CATEGORIES = listOf(
+            Category(name = "Loan Received", iconName = "account_balance_wallet", colorHex = "#E11D48", sortOrder = 25),
+            Category(name = "Debt Repayment", iconName = "credit_card", colorHex = "#F97316", sortOrder = 26),
+            Category(name = "Borrowed Money", iconName = "handshake", colorHex = "#8B5CF6", sortOrder = 27),
+            Category(name = "Salary Advance", iconName = "receipt_long", colorHex = "#DC2626", sortOrder = 28),
+            Category(name = "Loan Given", iconName = "payments", colorHex = "#0284C7", sortOrder = 29),
+            Category(name = "Debt", iconName = "credit_card", colorHex = "#DC2626", sortOrder = 30)
+        )
+
+        val DEFAULT_CATEGORIES = DEFAULT_EXPENSE_CATEGORIES + DEFAULT_INCOME_CATEGORIES + DEFAULT_DEBT_CATEGORIES + listOf(
+            Category(name = "Salary / Income", iconName = "payments", colorHex = "#16A34A", sortOrder = 31),
+            Category(name = "Other", iconName = "more_horiz", colorHex = "#94A3B8", sortOrder = 32)
         )
     }
 }
