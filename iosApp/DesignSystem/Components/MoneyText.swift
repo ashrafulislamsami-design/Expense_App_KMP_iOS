@@ -35,6 +35,30 @@ struct MoneyText: View {
         self.color = color
     }
     
+    init(
+        minorUnits: Int,
+        currencySymbol: String = "৳",
+        decimals: Int = 2,
+        isCompact: Bool = false,
+        showSign: Bool = false,
+        style: Font = .body,
+        font: Font? = nil,
+        weight: Font.Weight = .regular,
+        color: Color? = nil
+    ) {
+        self.init(
+            minorUnits: Int64(minorUnits),
+            currencySymbol: currencySymbol,
+            decimals: decimals,
+            isCompact: isCompact,
+            showSign: showSign,
+            style: style,
+            font: font,
+            weight: weight,
+            color: color
+        )
+    }
+    
     var body: some View {
         Text(formattedString)
             .font(style)

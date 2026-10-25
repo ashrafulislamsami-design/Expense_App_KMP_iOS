@@ -193,7 +193,9 @@ class CrossPlatformBackupService {
             return (false, "Unsupported or missing formatVersion")
         }
         
-        guard let _ = json["accounts"] as? [[String: Any]] ?? json["payload"] as? [String: Any] else {
+        let hasAccounts = (json["accounts"] as? [[String: Any]]) != nil
+        let hasPayload = (json["payload"] as? [String: Any]) != nil
+        guard hasAccounts || hasPayload else {
             return (false, "Missing accounts or payload object")
         }
         

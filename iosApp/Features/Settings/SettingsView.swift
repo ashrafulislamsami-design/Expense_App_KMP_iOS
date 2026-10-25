@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var securityManager = BiometricSecurityManager.shared
     
-    @AppStorage("salaryAmountMinor") private var salaryAmountMinor: Int64 = 8500000
+    @AppStorage("salaryAmountMinor") private var salaryAmountMinor: Int = 8500000
     @AppStorage("salaryPayday") private var salaryPayday: Int = 1
     @AppStorage("reportingMode") private var reportingMode: String = "SALARY_CYCLE"
     @AppStorage("isPrivacyMaskEnabled") private var isPrivacyMaskEnabled: Bool = false
