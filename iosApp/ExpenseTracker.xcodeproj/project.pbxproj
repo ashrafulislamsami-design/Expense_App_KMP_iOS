@@ -94,6 +94,7 @@
 				AA0200002CC0000000000002 /* iosAppTests */,
 				AA0000022CC0000000000001 /* Products */,
 			);
+			path = "..";
 			sourceTree = "<group>";
 		};
 		AA0000022CC0000000000001 /* Products */ = {
