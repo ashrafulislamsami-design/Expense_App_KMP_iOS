@@ -7,6 +7,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   shared-and-android:
     name: KMP Shared Tests & Android Build
@@ -103,14 +106,48 @@ jobs:
 
       - name: Package Simulator App for Web & Virtual Testing (Appetize.io / Simulator)
         run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ExpenseTracker.app" -type d | head -1)
-          echo "Found app at: $APP_PATH"
-          cd "$(dirname "$APP_PATH")"
-          zip -r ExpenseTracker-Simulator.zip ExpenseTracker.app
-          cp ExpenseTracker-Simulator.zip "$GITHUB_WORKSPACE/"
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/Debug-iphonesimulator/ExpenseTracker.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ExpenseTracker.app" -type d | head -1)
+          fi
+          echo "Found compiled app at: $APP_PATH"
+          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
 
-      - name: Upload Simulator App (Ready for Appetize.io or Mac Simulator)
+          # Guarantee Info.plist is inside the app bundle
+          if [ ! -f "$APP_PATH/Info.plist" ]; then
+            echo "Info.plist missing in app bundle. Copying from iosApp/Info.plist..."
+            cp iosApp/Info.plist "$APP_PATH/Info.plist"
+          fi
+          plutil -lint "$APP_PATH/Info.plist"
+
+          echo "=== APP BUNDLE CONTENTS ==="
+          ls -la "$APP_PATH"
+
+          # Create clean Appetize-ready zip (-X strips macOS extended attributes)
+          cd "$(dirname "$APP_PATH")"
+          zip -r -X "$GITHUB_WORKSPACE/ExpenseTracker-Simulator.zip" ExpenseTracker.app
+          cd "$GITHUB_WORKSPACE"
+
+          echo "=== ZIP ARCHIVE VERIFICATION ==="
+          unzip -l ExpenseTracker-Simulator.zip | head -n 35
+
+      - name: Upload Single-Layer Appetize Ready Zip
         uses: actions/upload-artifact@v4
         with:
-          name: ios-simulator-app-zip
+          name: ExpenseTracker-Appetize
+          path: ${{ env.APP_PATH }}
+
+      - name: Upload Simulator Zip Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExpenseTracker-Simulator-Archive
           path: ExpenseTracker-Simulator.zip
+
+      - name: Publish Direct Simulator Download to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: latest-simulator
+          name: "Expense Tracker iOS Simulator Build"
+          body: "Direct Appetize.io-ready iOS Simulator build. Download ExpenseTracker-Simulator.zip and drop it into Appetize.io directly (no extra unzipping required)."
+          files: ExpenseTracker-Simulator.zip
