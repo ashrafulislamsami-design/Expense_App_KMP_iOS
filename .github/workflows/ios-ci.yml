@@ -84,6 +84,7 @@ jobs:
 
       - name: Build iOS Application for Simulator
         run: |
+          set -o pipefail
           xcodebuild \
             -project iosApp/ExpenseTracker.xcodeproj \
             -scheme ExpenseTracker \
@@ -96,6 +97,7 @@ jobs:
 
       - name: Execute iOS Unit Tests on Simulator
         run: |
+          set -o pipefail
           xcodebuild test \
             -project iosApp/ExpenseTracker.xcodeproj \
             -scheme ExpenseTracker \
@@ -123,6 +125,16 @@ jobs:
           echo "=== APP BUNDLE CONTENTS ==="
           ls -la "$APP_PATH"
 
+          # Verify the native executable exists
+          if [ ! -f "$APP_PATH/ExpenseTracker" ]; then
+            echo "CRITICAL ERROR: Binary $APP_PATH/ExpenseTracker was not generated!"
+            exit 1
+          fi
+
+          # Stage payload folder so upload-artifact preserves the .app root directory
+          mkdir -p "$GITHUB_WORKSPACE/appetize_payload"
+          cp -R "$APP_PATH" "$GITHUB_WORKSPACE/appetize_payload/"
+
           # Create clean Appetize-ready zip (-X strips macOS extended attributes)
           cd "$(dirname "$APP_PATH")"
           zip -r -X "$GITHUB_WORKSPACE/ExpenseTracker-Simulator.zip" ExpenseTracker.app
@@ -135,7 +147,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExpenseTracker-Appetize
-          path: ${{ env.APP_PATH }}
+          path: appetize_payload/
 
       - name: Upload Simulator Zip Archive
         uses: actions/upload-artifact@v4

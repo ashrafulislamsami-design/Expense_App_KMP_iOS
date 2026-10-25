@@ -43,30 +43,30 @@
 
 /* Begin PBXFileReference section */
 		AA0100002CC000000000000F /* ExpenseTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpenseTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA0100012CC0000000000001 /* ExpenseTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseTrackerApp.swift; sourceTree = "<group>"; };
-		AA0100022CC0000000000001 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
-		AA0100032CC0000000000001 /* SpacingAndShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingAndShapes.swift; sourceTree = "<group>"; };
-		AA0100042CC0000000000001 /* MoneyText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyText.swift; sourceTree = "<group>"; };
-		AA0100052CC0000000000001 /* KPICardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KPICardView.swift; sourceTree = "<group>"; };
-		AA0100062CC0000000000001 /* PulseCurveChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulseCurveChartView.swift; sourceTree = "<group>"; };
-		AA0100072CC0000000000001 /* DonutChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonutChartView.swift; sourceTree = "<group>"; };
-		AA0100082CC0000000000001 /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
-		AA0100092CC0000000000001 /* CrossPlatformBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossPlatformBackupService.swift; sourceTree = "<group>"; };
-		AA01000A2CC0000000000001 /* BiometricSecurityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricSecurityManager.swift; sourceTree = "<group>"; };
-		AA01000B2CC0000000000001 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
-		AA01000C2CC0000000000001 /* HomeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardView.swift; sourceTree = "<group>"; };
-		AA01000D2CC0000000000001 /* OnboardingFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowView.swift; sourceTree = "<group>"; };
-		AA01000E2CC0000000000001 /* TransactionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsListView.swift; sourceTree = "<group>"; };
-		AA01000F2CC0000000000001 /* QuickAddExpenseSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddExpenseSheet.swift; sourceTree = "<group>"; };
-		AA0100102CC0000000000001 /* BudgetsOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetsOverviewView.swift; sourceTree = "<group>"; };
-		AA0100112CC0000000000001 /* GoalsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsListView.swift; sourceTree = "<group>"; };
-		AA0100122CC0000000000001 /* TreeOfHopeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeOfHopeView.swift; sourceTree = "<group>"; };
-		AA0100132CC0000000000001 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
-		AA0100142CC0000000000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		AA0100152CC0000000000001 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigation.swift; sourceTree = "<group>"; };
-		AA0100162CC0000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0100012CC0000000000001 /* ExpenseTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ExpenseTrackerApp.swift; sourceTree = SOURCE_ROOT; };
+		AA0100022CC0000000000001 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem/Colors.swift; sourceTree = SOURCE_ROOT; };
+		AA0100032CC0000000000001 /* SpacingAndShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem/SpacingAndShapes.swift; sourceTree = SOURCE_ROOT; };
+		AA0100042CC0000000000001 /* MoneyText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem/Components/MoneyText.swift; sourceTree = SOURCE_ROOT; };
+		AA0100052CC0000000000001 /* KPICardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem/Components/KPICardView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100062CC0000000000001 /* PulseCurveChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem/Components/PulseCurveChartView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100072CC0000000000001 /* DonutChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem/Components/DonutChartView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100082CC0000000000001 /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data/Database/DatabaseManager.swift; sourceTree = SOURCE_ROOT; };
+		AA0100092CC0000000000001 /* CrossPlatformBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data/Backup/CrossPlatformBackupService.swift; sourceTree = SOURCE_ROOT; };
+		AA01000A2CC0000000000001 /* BiometricSecurityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Security/BiometricSecurityManager.swift; sourceTree = SOURCE_ROOT; };
+		AA01000B2CC0000000000001 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications/NotificationScheduler.swift; sourceTree = SOURCE_ROOT; };
+		AA01000C2CC0000000000001 /* HomeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Home/HomeDashboardView.swift; sourceTree = SOURCE_ROOT; };
+		AA01000D2CC0000000000001 /* OnboardingFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Onboarding/OnboardingFlowView.swift; sourceTree = SOURCE_ROOT; };
+		AA01000E2CC0000000000001 /* TransactionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Transactions/TransactionsListView.swift; sourceTree = SOURCE_ROOT; };
+		AA01000F2CC0000000000001 /* QuickAddExpenseSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Transactions/QuickAddExpenseSheet.swift; sourceTree = SOURCE_ROOT; };
+		AA0100102CC0000000000001 /* BudgetsOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Budgets/BudgetsOverviewView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100112CC0000000000001 /* GoalsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Goals/GoalsListView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100122CC0000000000001 /* TreeOfHopeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Goals/TreeOfHopeView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100132CC0000000000001 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Reports/ReportsView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100142CC0000000000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Settings/SettingsView.swift; sourceTree = SOURCE_ROOT; };
+		AA0100152CC0000000000001 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navigation/AppNavigation.swift; sourceTree = SOURCE_ROOT; };
+		AA0100162CC0000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		AA0200002CC000000000000F /* ExpenseTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpenseTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA0200012CC0000000000001 /* ExpenseTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseTrackerTests.swift; sourceTree = "<group>"; };
+		AA0200012CC0000000000001 /* ExpenseTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../iosAppTests/ExpenseTrackerTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
