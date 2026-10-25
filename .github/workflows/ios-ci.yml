@@ -1,0 +1,107 @@
+name: Cross-Platform KMP & iOS Simulator CI
+
+on:
+  push:
+    branches: [ "main", "feature/**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  shared-and-android:
+    name: KMP Shared Tests & Android Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew
+
+      - name: Run Shared Multiplatform Tests
+        run: ./gradlew :shared:allTests --stacktrace
+
+      - name: Run Android Unit Tests & Debug Build
+        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug --stacktrace
+
+      - name: Upload Android Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+  ios-simulator-build-and-test:
+    name: macOS iOS Simulator Build & Test
+    runs-on: macos-14
+    needs: shared-and-android
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Select Xcode Version
+        run: |
+          if [ -d "/Applications/Xcode_15.4.app" ]; then
+            sudo xcode-select -switch /Applications/Xcode_15.4.app
+          elif [ -d "/Applications/Xcode_15.2.app" ]; then
+            sudo xcode-select -switch /Applications/Xcode_15.2.app
+          fi
+          xcodebuild -version
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew
+
+      - name: Build KMP iOS Framework (SharedCore)
+        run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --stacktrace
+
+      - name: List Available iOS Simulators
+        run: xcrun simctl list devices available
+
+      - name: Build iOS Application for Simulator
+        run: |
+          xcodebuild \
+            -project iosApp/ExpenseTracker.xcodeproj \
+            -scheme ExpenseTracker \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Execute iOS Unit Tests on Simulator
+        run: |
+          xcodebuild test \
+            -project iosApp/ExpenseTracker.xcodeproj \
+            -scheme ExpenseTrackerTests \
+            -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package Simulator App for Web & Virtual Testing (Appetize.io / Simulator)
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ExpenseTracker.app" -type d | head -n 1)
+          echo "Found app at: $APP_PATH"
+          cd "$(dirname "$APP_PATH")"
+          zip -r ExpenseTracker-Simulator.zip ExpenseTracker.app
+          cp ExpenseTracker-Simulator.zip "$GITHUB_WORKSPACE/"
+
+      - name: Upload Simulator App (Ready for Appetize.io or Mac Simulator)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-app-zip
+          path: ExpenseTracker-Simulator.zip
