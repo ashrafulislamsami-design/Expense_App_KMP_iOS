@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense & Salary Tracker - Executive Fintech Preview</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="studio-layout">
+        <!-- Left Sidebar: Controls & Diagnostics -->
+        <aside class="sidebar-panel">
+            <div class="studio-header">
+                <div class="studio-logo">৳</div>
+                <div class="studio-title">
+                    <h1>Executive UI Studio</h1>
+                    <p>Antigravity Live Generative UI</p>
+                </div>
+            </div>
+
+            <div class="badge-live">
+                <span class="pulsing-dot"></span>
+                <span>Reactive Real-Time Preview</span>
+            </div>
+
+            <!-- Core Invariants -->
+            <div class="control-section">
+                <div class="control-title">Core Invariants</div>
+                <div class="stat-item">
+                    <span class="stat-label">Offline-First Privacy</span>
+                    <span class="stat-value" style="color: #10B981;">100% Offline</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Zero-Float Currency</span>
+                    <span class="stat-value" style="color: #34D399;">MinorUnits (Poisha)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Target Hardware</span>
+                    <span class="stat-value">OPPO Reno 10 Pro+</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Architecture</span>
+                    <span class="stat-value">Clean MVVM + Room</span>
+                </div>
+            </div>
+
+            <!-- Simulator Controls -->
+            <div class="control-section">
+                <div class="control-title">Simulator Controls</div>
+                <div class="action-btn-grid">
+                    <button class="studio-btn" id="btnToggleTheme">
+                        🌓 Dark / Light
+                    </button>
+                    <button class="studio-btn" id="btnToggleChassis">
+                        📱 Phone Frame
+                    </button>
+                    <button class="studio-btn" id="btnInjectSample">
+                        ➕ Inject Demo
+                    </button>
+                    <button class="studio-btn" id="btnResetData">
+                        🗑️ Reset Ledger
+                    </button>
+                </div>
+            </div>
+
+            <!-- Real-time Financial Metrics -->
+            <div class="control-section">
+                <div class="control-title">Live Financial State</div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Transactions</span>
+                    <span class="stat-value" id="statTxCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Net Spent</span>
+                    <span class="stat-value" id="statNetSpent">৳0.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Safe-To-Spend / Day</span>
+                    <span class="stat-value" id="statSafeToSpend" style="color: #34D399;">৳0.00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Salary Cycle Remaining</span>
+                    <span class="stat-value" id="statRemainingDays">-</span>
+                </div>
+            </div>
+
+            <div style="margin-top:auto; font-size:11px; color:#64748B; text-align:center;">
+                Jetpack Compose Material 3 Mirror &bull; Antigravity Agent
+            </div>
+        </aside>
+
+        <!-- Right Viewport: Mobile Simulator Stage -->
+        <main class="viewport-panel">
+            <div class="device-chassis" id="deviceChassis">
+                <!-- Punch Hole Camera & Speaker -->
+                <div class="punch-hole"></div>
+
+                <!-- Toast Notification Banner -->
+                <div class="toast-notice" id="toastNotice">Transaction Saved</div>
+
+                <!-- Screen Area -->
+                <div class="screen-area">
+                    <!-- Android Status Bar -->
+                    <div class="android-status-bar">
+                        <span id="statusClock">12:00</span>
+                        <div class="status-icons">
+                            <span>5G</span>
+                            <span>📶</span>
+                            <span>98%</span>
+                            <span>🔋</span>
+                        </div>
+                    </div>
+
+                    <!-- Android Top App Bar -->
+                    <header class="android-top-bar">
+                        <div class="app-title-group">
+                            <span class="app-subtitle">Personal Finance</span>
+                            <h2 class="app-title">Salary & Expenses</h2>
+                        </div>
+                        <div class="cycle-badge" id="cycleStatusBadge">
+                            <span class="cycle-badge-dot"></span>
+                            <span id="cycleRemainingPill">1d left</span>
+                        </div>
+                    </header>
+
+                    <!-- Scrollable Screen Content -->
+                    <main class="screen-content" id="screenContent">
+                        <!-- Rendered dynamically by app.js -->
+                    </main>
+
+                    <!-- Floating Action Button (FAB) -->
+                    <button class="fab-btn" id="fabAdd" title="Quick Add Transaction" aria-label="Add Transaction">
+                        +
+                    </button>
+
+                    <!-- Material 3 Bottom Navigation Bar (4 clean destinations) -->
+                    <nav class="android-nav-bar">
+                        <button class="nav-tab active" data-tab="dashboard">
+                            <div class="nav-icon-pill">🏠</div>
+                            <span class="nav-label">Dashboard</span>
+                        </button>
+                        <button class="nav-tab" data-tab="transactions">
+                            <div class="nav-icon-pill">📜</div>
+                            <span class="nav-label">Ledger</span>
+                        </button>
+                        <button class="nav-tab" data-tab="budgets">
+                            <div class="nav-icon-pill">📊</div>
+                            <span class="nav-label">Budgets</span>
+                        </button>
+                        <button class="nav-tab" data-tab="settings">
+                            <div class="nav-icon-pill">⚙️</div>
+                            <span class="nav-label">Settings</span>
+                        </button>
+                    </nav>
+
+                    <!-- Android Gesture Pill Home Bar -->
+                    <div class="android-gesture-pill"></div>
+
+                    <!-- Quick Add Modal Sheet -->
+                    <div class="modal-overlay" id="quickAddModal">
+                        <div class="modal-sheet">
+                            <div class="modal-drag-handle"></div>
+                            <div class="modal-header">
+                                <h3 class="modal-title">Add Transaction</h3>
+                                <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+                            </div>
+
+                            <!-- 3-Way Segmented Control -->
+                            <div class="type-segmented-control">
+                                <button class="type-segment-btn active expense" data-type="EXPENSE"
+                                    id="typeExpenseBtn">Expense</button>
+                                <button class="type-segment-btn" data-type="INCOME" id="typeIncomeBtn">Income</button>
+                                <button class="type-segment-btn" data-type="TRANSFER"
+                                    id="typeTransferBtn">Transfer</button>
+                            </div>
+
+                            <!-- Amount Input -->
+                            <div class="amount-input-box">
+                                <span class="amount-currency">৳</span>
+                                <input type="number" id="modalAmountField" class="amount-field" value="80" step="any"
+                                    placeholder="0" />
+                            </div>
+
+                            <!-- Category Chips -->
+                            <div class="chips-row" id="modalCategoryChips">
+                                <!-- Rendered dynamically -->
+                            </div>
+
+                            <!-- Account Selector -->
+                            <div class="chips-row" id="modalAccountChips">
+                                <!-- Rendered dynamically -->
+                            </div>
+
+                            <!-- Note Input -->
+                            <input type="text" id="modalNoteField" class="text-input-field"
+                                placeholder="Note / Payee (e.g. Breakfast, Tea, Grocery)" />
+
+                            <!-- Save Button -->
+                            <button class="btn-save-tx" id="modalSaveBtn">Confirm &amp; Save Entry</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
