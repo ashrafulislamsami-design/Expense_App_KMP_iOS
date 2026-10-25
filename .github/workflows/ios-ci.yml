@@ -67,8 +67,17 @@ jobs:
       - name: Build KMP iOS Framework (SharedCore)
         run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --stacktrace
 
-      - name: List Available iOS Simulators
-        run: xcrun simctl list devices available
+      - name: Resolve and Boot Target iOS Simulator
+        id: sim
+        run: |
+          xcrun simctl list devices available
+          SIM_ID=$(xcrun simctl list devices available | grep -E "iPhone (15|16|14|SE)" | grep -oE "[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}" | head -1)
+          if [ -z "$SIM_ID" ]; then
+            SIM_ID=$(xcrun simctl list devices available | grep -oE "[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}" | head -1)
+          fi
+          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
+          echo "Selected Simulator UUID: $SIM_ID"
+          xcrun simctl boot "$SIM_ID" || true
 
       - name: Build iOS Application for Simulator
         run: |
@@ -76,7 +85,7 @@ jobs:
             -project iosApp/ExpenseTracker.xcodeproj \
             -scheme ExpenseTracker \
             -configuration Debug \
-            -destination "generic/platform=iOS Simulator" \
+            -destination "id=$SIM_ID" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -84,19 +93,17 @@ jobs:
 
       - name: Execute iOS Unit Tests on Simulator
         run: |
-          SIM_NAME=$(xcrun simctl list devices available | grep -oE "iPhone [0-9]+" | head -1 || echo "iPhone 15")
-          echo "Running tests on simulator: $SIM_NAME"
           xcodebuild test \
             -project iosApp/ExpenseTracker.xcodeproj \
             -scheme ExpenseTracker \
-            -destination "platform=iOS Simulator,name=$SIM_NAME" \
+            -destination "id=$SIM_ID" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Package Simulator App for Web & Virtual Testing (Appetize.io / Simulator)
         run: |
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ExpenseTracker.app" -type d | head -n 1)
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ExpenseTracker.app" -type d | head -1)
           echo "Found app at: $APP_PATH"
           cd "$(dirname "$APP_PATH")"
           zip -r ExpenseTracker-Simulator.zip ExpenseTracker.app
