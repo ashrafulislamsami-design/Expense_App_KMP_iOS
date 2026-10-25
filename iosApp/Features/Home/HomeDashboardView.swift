@@ -1,4 +1,4 @@
-import SwiftUI
+﻿import SwiftUI
 
 struct HomeDashboardView: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -6,6 +6,7 @@ struct HomeDashboardView: View {
     @State private var selectedTimeframe: String = "Current cycle"
     @State private var showingQuickAdd: Bool = false
     @State private var showingSetup: Bool = false
+    @State private var donutMode: Int = 0
     
     // Sample state simulating real database telemetry
     @State private var currencySymbol: String = "৳"
@@ -42,17 +43,20 @@ struct HomeDashboardView: View {
                         currencySymbol: currencySymbol
                     )
                     
-                    // 4. Budget & Category Donut Ring Breakdown
-                    DonutChartView(
-                        slices: [
-                            DonutSliceDTO(name: "Available budget", amount: availableBudget, percentage: 65, color: Color.appIncome),
-                            DonutSliceDTO(name: "Food & Dining", amount: 450000, percentage: 15, color: Color(red: 245/255, green: 158/255, blue: 11/255)),
-                            DonutSliceDTO(name: "Transport", amount: 300000, percentage: 10, color: Color(red: 59/255, green: 130/255, blue: 246/255)),
-                            DonutSliceDTO(name: "Utilities", amount: 200000, percentage: 7, color: Color(red: 239/255, green: 68/255, blue: 68/255)),
-                            DonutSliceDTO(name: "Shopping", amount: 90000, percentage: 3, color: Color(red: 236/255, green: 72/255, blue: 153/255))
-                        ],
-                        currencySymbol: currencySymbol
-                    )
+                    // 4. Budget & Category Donut Ring Breakdown (Spending | Income | Debts)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Picker("Category Breakdown", selection: $donutMode) {
+                            Text("Spending").tag(0)
+                            Text("Income").tag(1)
+                            Text("Debts & Loans").tag(2)
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        DonutChartView(
+                            slices: currentDonutSlices,
+                            currencySymbol: currencySymbol
+                        )
+                    }
                     
                     // 5. Budget Health & Tree of Hope Quick Glance
                     budgetAndHopeRow
@@ -315,6 +319,30 @@ struct HomeDashboardView: View {
                 weight: .bold,
                 color: amount > 0 ? Color.appIncome : AppColors.onSurface(for: colorScheme)
             )
+        }
+    }
+
+    private var currentDonutSlices: [DonutSliceDTO] {
+        switch donutMode {
+        case 0:
+            return [
+                DonutSliceDTO(name: "Available budget", amount: availableBudget, percentage: 65, color: Color.appIncome),
+                DonutSliceDTO(name: "Food & Dining", amount: 450000, percentage: 15, color: Color(red: 245/255, green: 158/255, blue: 11/255)),
+                DonutSliceDTO(name: "Transport", amount: 300000, percentage: 10, color: Color(red: 59/255, green: 130/255, blue: 246/255)),
+                DonutSliceDTO(name: "Utilities", amount: 200000, percentage: 7, color: Color(red: 239/255, green: 68/255, blue: 68/255)),
+                DonutSliceDTO(name: "Shopping", amount: 90000, percentage: 3, color: Color(red: 236/255, green: 72/255, blue: 153/255))
+            ]
+        case 1:
+            return [
+                DonutSliceDTO(name: "Monthly Salary", amount: 5000000, percentage: 80, color: Color.appIncome),
+                DonutSliceDTO(name: "Freelance", amount: 800000, percentage: 13, color: Color.blue),
+                DonutSliceDTO(name: "Investments", amount: 450000, percentage: 7, color: Color.purple)
+            ]
+        default:
+            return [
+                DonutSliceDTO(name: "Loan Received", amount: 300000, percentage: 60, color: Color.red),
+                DonutSliceDTO(name: "Borrowed Money", amount: 200000, percentage: 40, color: Color.orange)
+            ]
         }
     }
 }

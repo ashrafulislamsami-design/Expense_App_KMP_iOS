@@ -15,6 +15,8 @@ struct QuickAddExpenseSheet: View {
     enum TransactionType: String, CaseIterable, Identifiable {
         case expense = "Expense"
         case income = "Income"
+        case debtReceived = "Debt Received"
+        case debtPaid = "Debt Paid"
         case transfer = "Transfer"
         
         var id: String { rawValue }
@@ -40,6 +42,14 @@ struct QuickAddExpenseSheet: View {
         ("Investment", "chart.line.uptrend.xyaxis", .green),
         ("Gift", "gift.fill", .pink),
         ("Other", "ellipsis.circle.fill", .gray)
+    ]
+    
+    let debtCategories: [(name: String, icon: String, color: Color)] = [
+        ("Loan Received", "arrow.down.left.circle.fill", .red),
+        ("Borrowed Money", "person.2.fill", .purple),
+        ("Debt Repayment", "creditcard.fill", .orange),
+        ("Salary Advance", "banknote.fill", .blue),
+        ("Other Debt", "ellipsis.circle.fill", .gray)
     ]
     
     var currentMinorUnits: Int64 {
@@ -105,7 +115,7 @@ struct QuickAddExpenseSheet: View {
                             }
                         }
                     } else {
-                        Picker(transactionType == .expense ? "Paid From" : "Deposit To", selection: $selectedAccount) {
+                        Picker(transactionType == .expense || transactionType == .debtPaid ? "Paid From" : "Deposit To", selection: $selectedAccount) {
                             ForEach(accounts, id: \.self) { acc in
                                 Text(acc).tag(acc)
                             }
@@ -116,7 +126,7 @@ struct QuickAddExpenseSheet: View {
                 // Category Picker (for Expense & Income)
                 if transactionType != .transfer {
                     Section(header: Text("Category").font(.caption).foregroundColor(AppColors.textSecondary)) {
-                        let categories = transactionType == .expense ? expenseCategories : incomeCategories
+                        let categories = transactionType == .expense ? expenseCategories : (transactionType == .income ? incomeCategories : debtCategories)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
                                 ForEach(categories, id: \.name) { cat in
@@ -151,7 +161,7 @@ struct QuickAddExpenseSheet: View {
                     DatePicker("Date & Time", selection: $date)
                 }
             }
-            .navigationTitle(transactionType == .expense ? "Add Expense" : (transactionType == .income ? "Add Income" : "Transfer"))
+            .navigationTitle(transactionType == .expense ? "Add Expense" : (transactionType == .income ? "Add Income" : (transactionType == .debtReceived ? "Debt Received" : (transactionType == .debtPaid ? "Debt Repayment" : "Transfer"))))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -170,8 +180,8 @@ struct QuickAddExpenseSheet: View {
     
     private var amountColor: Color {
         switch transactionType {
-        case .expense: return AppColors.expenseRed
-        case .income: return AppColors.incomeGreen
+        case .expense, .debtPaid: return AppColors.expenseRed
+        case .income, .debtReceived: return AppColors.incomeGreen
         case .transfer: return AppColors.brandPrimary
         }
     }

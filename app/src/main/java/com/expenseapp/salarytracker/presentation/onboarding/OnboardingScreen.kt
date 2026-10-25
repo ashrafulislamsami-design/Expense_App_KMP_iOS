@@ -1039,7 +1039,7 @@ private fun Step4BudgetAndAlreadySpent(
         Spacer(modifier = Modifier.height(AppSpacing.sm))
 
         // Mid-Cycle "Already Spent" Section (Shown prominently when today != salary day, or always available)
-        AnimatedVisibility(visible = isMidCycle) {
+        AnimatedVisibility(visible = true) {
             Card(
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
@@ -1063,7 +1063,7 @@ private fun Step4BudgetAndAlreadySpent(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Mid-Cycle Check (${today.format(dateFmt)} ≠ ${selectedPayDay}${getOrdinalSuffix(selectedPayDay)})",
+                            text = if (isMidCycle) "Mid-Cycle Check (${today.format(dateFmt)} ≠ ${selectedPayDay}${getOrdinalSuffix(selectedPayDay)})" else "Cycle Spend Check (Starting Spend)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -1073,7 +1073,7 @@ private fun Step4BudgetAndAlreadySpent(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Since today is not your salary date (${selectedPayDay}${getOrdinalSuffix(selectedPayDay)}), how much have you already spent so far in this cycle?",
+                        text = if (isMidCycle) "Since today is not your salary date (${selectedPayDay}${getOrdinalSuffix(selectedPayDay)}), how much have you already spent so far in this cycle?" else "Have you already spent anything in this cycle so far? (Leave 0 if none)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
