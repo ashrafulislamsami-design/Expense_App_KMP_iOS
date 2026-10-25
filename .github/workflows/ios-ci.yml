@@ -155,11 +155,47 @@ jobs:
           name: ExpenseTracker-Simulator-Archive
           path: ExpenseTracker-Simulator.zip
 
-      - name: Publish Direct Simulator Download to GitHub Releases
+      - name: Build KMP iOS Device Framework (SharedCore)
+        run: ./gradlew :shared:linkDebugFrameworkIosArm64 --stacktrace
+
+      - name: Build and Package iOS IPA for Physical Device Sideloading
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project iosApp/ExpenseTracker.xcodeproj \
+            -scheme ExpenseTracker \
+            -configuration Debug \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee build_device.log || (echo "=== DEVICE BUILD FAILED ===" && cat build_device.log | tail -n 80 && exit 1)
+
+          DEVICE_APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -path "*/Build/Products/Debug-iphoneos/ExpenseTracker.app" -type d | head -1)
+          if [ -n "$DEVICE_APP_PATH" ]; then
+            echo "Found device app at: $DEVICE_APP_PATH"
+            mkdir -p "$GITHUB_WORKSPACE/Payload"
+            cp -R "$DEVICE_APP_PATH" "$GITHUB_WORKSPACE/Payload/"
+            cd "$GITHUB_WORKSPACE"
+            zip -r -X ExpenseTracker-Device.ipa Payload
+            echo "Successfully packaged ExpenseTracker-Device.ipa"
+          else
+            echo "Warning: Could not locate Debug-iphoneos app bundle"
+          fi
+
+      - name: Upload iOS Sideloadable IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExpenseTracker-Device-IPA
+          path: ExpenseTracker-Device.ipa
+
+      - name: Publish Direct Simulator & Device Downloads to GitHub Releases
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: latest-simulator
-          name: "Expense Tracker iOS Simulator Build"
-          body: "Direct Appetize.io-ready iOS Simulator build. Download ExpenseTracker-Simulator.zip and drop it into Appetize.io directly (no extra unzipping required)."
-          files: ExpenseTracker-Simulator.zip
+          name: "Expense Tracker iOS Simulator & Sideloadable IPA Build"
+          body: "Direct downloads: ExpenseTracker-Simulator.zip (for Appetize.io or Mac Simulator) and ExpenseTracker-Device.ipa (for sideloading to physical iPhone via Sideloadly or AltStore)."
+          files: |
+            ExpenseTracker-Simulator.zip
+            ExpenseTracker-Device.ipa
