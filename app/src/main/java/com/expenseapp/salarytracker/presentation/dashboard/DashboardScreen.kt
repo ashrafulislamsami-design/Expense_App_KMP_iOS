@@ -1,4 +1,4 @@
-﻿package com.expenseapp.salarytracker.presentation.dashboard
+package com.expenseapp.salarytracker.presentation.dashboard
 
 import androidx.compose.foundation.BorderStroke
 
@@ -35,6 +35,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 
 import androidx.compose.foundation.layout.width
+
+import androidx.compose.foundation.layout.widthIn
 
 import androidx.compose.foundation.lazy.LazyColumn
 
@@ -571,40 +573,25 @@ fun DashboardScreen(
 
             ) {
 
-                // 1. Account Wallets Strip (quick horizontal glance + Wallets & Setup action)
-
+                // 1. Executive Master Command Center
                 item {
-
-                    AccountWalletsStrip(
-
-                        accounts = state.accountBalances,
-
-                        totalBalance = state.totalBalance,
-
-                        currencySymbol = state.currencySymbol,
-
-                        onManageWalletsClick = onNavigateToSetup
-
+                    ExecutiveHeroSection(
+                        state = state,
+                        onOpenQuickAdd = onOpenQuickAdd,
+                        onManageWalletsClick = onNavigateToSetup,
+                        onBudgetsClick = onNavigateToBudgets,
+                        onTransactionsClick = onNavigateToTransactions,
+                        onGoalsClick = onNavigateToGoals
                     )
-
                 }
 
-                // 2. 2x2 At-a-Glance KPI Metric Grid
-
+                // 2. Account Wallets Horizontal Strip
                 item {
-
-                    KpiQuadGridSection(
-
-                        state = state,
-
-                        onBudgetsClick = onNavigateToBudgets,
-
-                        onTransactionsClick = onNavigateToTransactions,
-
-                        onGoalsClick = onNavigateToGoals
-
+                    AccountWalletsStrip(
+                        accounts = state.accountBalances,
+                        currencySymbol = state.currencySymbol,
+                        onManageWalletsClick = onNavigateToSetup
                     )
-
                 }
 
                 // 3. 7-Day Spending & Cashflow Pulse Curve Card
@@ -716,577 +703,470 @@ fun DashboardScreen(
 }
 
 // =============================================================================
-
-//  1. ACCOUNT WALLETS STRIP
-
+//  1. EXECUTIVE MASTER FINANCIAL COMMAND CENTER
 // =============================================================================
 
 @Composable
-
-private fun AccountWalletsStrip(
-
-    accounts: List<AccountBalanceItem>,
-
-    totalBalance: MinorUnits,
-
-    currencySymbol: String,
-
-    onManageWalletsClick: () -> Unit
-
-) {
-
-    Row(
-
-        modifier = Modifier
-
-            .fillMaxWidth()
-
-            .horizontalScroll(rememberScrollState()),
-
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-
-        verticalAlignment = Alignment.CenterVertically
-
-    ) {
-
-        // Total Net Worth Pill
-
-        Surface(
-
-            shape = RoundedCornerShape(10.dp),
-
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
-
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-
-        ) {
-
-            Row(
-
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-
-                verticalAlignment = Alignment.CenterVertically,
-
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-
-            ) {
-
-                Icon(
-
-                    imageVector = Icons.Outlined.AccountBalanceWallet,
-
-                    contentDescription = null,
-
-                    tint = MaterialTheme.colorScheme.primary,
-
-                    modifier = Modifier.size(15.dp)
-
-                )
-
-                Text(
-
-                    text = "Net Balance:",
-
-                    style = MaterialTheme.typography.labelSmall,
-
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-
-                )
-
-                Text(
-
-                    text = totalBalance.formatCompact(currencySymbol),
-
-                    style = MaterialTheme.typography.labelMedium,
-
-                    fontWeight = FontWeight.Bold,
-
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-
-                )
-
-            }
-
-        }
-
-        // Individual Account Pills
-
-        accounts.forEach { item ->
-
-            val dotColor = parseHexColor(item.account.colorHex, 2)
-
-            Surface(
-
-                shape = RoundedCornerShape(10.dp),
-
-                color = MaterialTheme.colorScheme.surface,
-
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-
-            ) {
-
-                Row(
-
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-
-                    verticalAlignment = Alignment.CenterVertically,
-
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-
-                ) {
-
-                    Box(
-
-                        modifier = Modifier
-
-                            .size(7.dp)
-
-                            .clip(CircleShape)
-
-                            .background(dotColor)
-
-                    )
-
-                    Text(
-
-                        text = item.account.name,
-
-                        style = MaterialTheme.typography.labelSmall,
-
-                        fontWeight = FontWeight.Medium,
-
-                        color = MaterialTheme.colorScheme.onSurface
-
-                    )
-
-                    Text(
-
-                        text = item.balance.formatCompact(currencySymbol),
-
-                        style = MaterialTheme.typography.labelMedium,
-
-                        fontWeight = FontWeight.SemiBold,
-
-                        color = if (item.balance.isNegative()) expenseTextColor() else MaterialTheme.colorScheme.onSurface
-
-                    )
-
-                }
-
-            }
-
-        }
-
-        // "+ Wallets & Setup" Action Chip
-
-        Surface(
-
-            shape = RoundedCornerShape(10.dp),
-
-            color = MaterialTheme.colorScheme.surface,
-
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
-
-            modifier = Modifier
-
-                .clip(RoundedCornerShape(10.dp))
-
-                .clickable { onManageWalletsClick() }
-
-        ) {
-
-            Row(
-
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-
-                verticalAlignment = Alignment.CenterVertically,
-
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-
-            ) {
-
-                Icon(
-
-                    imageVector = Icons.Filled.Add,
-
-                    contentDescription = "Manage wallets and setup",
-
-                    tint = MaterialTheme.colorScheme.primary,
-
-                    modifier = Modifier.size(14.dp)
-
-                )
-
-                Text(
-
-                    text = "Wallets & Setup",
-
-                    style = MaterialTheme.typography.labelSmall,
-
-                    fontWeight = FontWeight.Bold,
-
-                    color = MaterialTheme.colorScheme.primary
-
-                )
-
-            }
-
-        }
-
-    }
-
-}
-
-// =============================================================================
-
-//  2. 2x2 AT-A-GLANCE KPI METRIC GRID
-
-// =============================================================================
-
-@Composable
-
-private fun KpiQuadGridSection(
-
+private fun ExecutiveHeroSection(
     state: DashboardUiState,
-
+    onOpenQuickAdd: () -> Unit,
+    onManageWalletsClick: () -> Unit,
     onBudgetsClick: () -> Unit,
-
     onTransactionsClick: () -> Unit,
-
     onGoalsClick: () -> Unit
-
 ) {
-
     val currency = state.currencySymbol
-
     val limit = state.overallBudget?.limitAmount ?: state.effectiveIncome
-
     val remaining = state.safeToSpend.remainingBudget
-
     val remainingPct = if (limit.isPositive()) {
-
         ((remaining.amountInMinorUnits.toDouble() / limit.amountInMinorUnits.toDouble()) * 100.0).toInt().coerceIn(0, 100)
-
     } else 100
 
-    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-
-        Row(
-
-            modifier = Modifier.fillMaxWidth(),
-
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
-
-        ) {
-
-            // Card 1: Available Budget / Balance
-
-            KpiStatCard(
-
-                title = "Available",
-
-                value = remaining.formatCompact(currency),
-
-                badgeText = "$remainingPct% left",
-
-                isBadgePositive = remainingPct > 20,
-
-                subtitle = if (state.overallBudget != null) "Of ${limit.formatCompact(currency)} limit" else "Of ${limit.formatCompact(currency)} salary",
-
-                accentColor = MaterialTheme.colorScheme.primary,
-
-                onClick = onBudgetsClick,
-
-                modifier = Modifier.weight(1f)
-
-            )
-
-            // Card 2: Period Spending
-
-            val spendDelta = state.spendDeltaPercent
-
-            val spendBadge = when {
-
-                spendDelta == null -> "${state.summary.transactionCount} items"
-
-                spendDelta > 0 -> "+$spendDelta%"
-
-                spendDelta < 0 -> "$spendDelta%"
-
-                else -> "0%"
-
-            }
-
-            // For spending, lower vs previous period is positive (good)
-
-            val isSpendGood = spendDelta == null || spendDelta <= 0
-
-            KpiStatCard(
-
-                title = "Spent",
-
-                value = state.summary.netExpense.formatCompact(currency),
-
-                badgeText = spendBadge,
-
-                isBadgePositive = isSpendGood,
-
-                subtitle = if (spendDelta != null) "vs previous period" else "In selected period",
-
-                accentColor = AppExpense,
-
-                onClick = onTransactionsClick,
-
-                modifier = Modifier.weight(1f)
-
-            )
-
-        }
-
-        Row(
-
-            modifier = Modifier.fillMaxWidth(),
-
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
-
-        ) {
-
-            // Card 3: Safe to Spend Today
-
-            val todaySpend = state.dailyTrend.lastOrNull()?.currentAmount ?: MinorUnits.ZERO
-
-            val safeToday = state.safeToSpend.safeAmountPerDay
-
-            val underDailyLimit = todaySpend <= safeToday || safeToday.isZero()
-
-            KpiStatCard(
-
-                title = "Safe today",
-
-                value = safeToday.formatCompact(currency),
-
-                badgeText = if (underDailyLimit) "On track" else "High today",
-
-                isBadgePositive = underDailyLimit,
-
-                subtitle = "${state.daysRemaining} days remaining",
-
-                accentColor = AppIncome,
-
-                onClick = onBudgetsClick,
-
-                modifier = Modifier.weight(1f)
-
-            )
-
-            // Card 4: Savings & Retention Growth
-
-            val rate = state.savingsRatePercent
-
-            val savedAmount = if (state.summary.totalSavings.isPositive()) {
-
-                state.summary.totalSavings
-
-            } else if (state.effectiveIncome > state.summary.netExpense) {
-
-                state.effectiveIncome - state.summary.netExpense
-
-            } else {
-
-                MinorUnits.ZERO
-
-            }
-
-            KpiStatCard(
-
-                title = "Retained Savings",
-
-                value = "+ $rate%",
-
-                badgeText = savedAmount.formatCompact(currency),
-
-                isBadgePositive = rate >= 15,
-
-                subtitle = "Income retention rate",
-
-                accentColor = AppSaving,
-
-                onClick = onGoalsClick,
-
-                modifier = Modifier.weight(1f)
-
-            )
-
-        }
-
-    }
-
-}
-
-@Composable
-
-private fun KpiStatCard(
-
-    title: String,
-
-    value: String,
-
-    badgeText: String,
-
-    isBadgePositive: Boolean,
-
-    subtitle: String,
-
-    accentColor: Color,
-
-    onClick: () -> Unit,
-
-    modifier: Modifier = Modifier
-
-) {
-
-    val badgeColor = if (isBadgePositive) incomeTextColor() else expenseTextColor()
-
-    val badgeBg = if (isBadgePositive) AppIncome.copy(alpha = 0.10f) else AppExpense.copy(alpha = 0.10f)
-
-    val badgeArrow = if (isBadgePositive) "↑" else "↓"
-
     Card(
-
-        modifier = modifier
-
-            .clip(MaterialTheme.shapes.medium)
-
-            .clickable { onClick() },
-
-        shape = MaterialTheme.shapes.medium,
-
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)),
         elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none)
-
     ) {
-
         Column(
-
             modifier = Modifier
-
                 .fillMaxWidth()
-
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-
+                .padding(horizontal = 18.dp, vertical = 16.dp)
         ) {
-
+            // Header Row: Metric Tag & Cycle Status Badge
             Row(
-
                 modifier = Modifier.fillMaxWidth(),
-
                 horizontalArrangement = Arrangement.SpaceBetween,
-
                 verticalAlignment = Alignment.CenterVertically
-
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.AccountBalanceWallet,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Text(
+                        text = "TOTAL NET BALANCE",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                Text(
-
-                    text = title,
-
-                    style = MaterialTheme.typography.labelMedium,
-
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-
-                )
-
-                Box(
-
-                    modifier = Modifier
-
-                        .size(7.dp)
-
-                        .clip(CircleShape)
-
-                        .background(accentColor)
-
-                )
-
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                ) {
+                    Text(
+                        text = "${state.daysRemaining}d remaining in cycle",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Dominant Tabular Numeral Balance
+            Text(
+                text = state.totalBalance.formatCompact(currency),
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.5).sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // Human financial intelligence status
+            val statusSummary = if (remaining.isPositive()) {
+                "${remaining.formatCompact(currency)} available to spend · $remainingPct% of cycle intact"
+            } else {
+                "Cycle budget limit reached"
+            }
             Text(
-
-                text = value,
-
-                style = MaterialTheme.typography.headlineSmall,
-
-                fontWeight = FontWeight.Bold,
-
-                color = MaterialTheme.colorScheme.onSurface,
-
-                maxLines = 1,
-
-                overflow = TextOverflow.Ellipsis
-
+                text = statusSummary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f), thickness = 0.75.dp)
+            Spacer(modifier = Modifier.height(12.dp))
 
+            // Three-Pillar Performance Metrics Ribbon
             Row(
-
-                verticalAlignment = Alignment.CenterVertically,
-
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
-                Surface(
-
-                    shape = RoundedCornerShape(4.dp),
-
-                    color = badgeBg
-
+                // Pillar 1: Daily Pace
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onBudgetsClick() }
+                        .padding(vertical = 2.dp),
+                    horizontalAlignment = Alignment.Start
                 ) {
-
                     Text(
-
-                        text = "$badgeArrow $badgeText",
-
+                        text = "SAFE TODAY",
                         style = MaterialTheme.typography.labelSmall,
-
-                        fontWeight = FontWeight.SemiBold,
-
-                        color = badgeColor,
-
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-
-                        maxLines = 1
-
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.8.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "${currency}${state.safeToSpend.safeAmountPerDay.amountInMinorUnits / 100L} / d",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Daily pace",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = AppIncome
+                    )
                 }
 
-                Text(
-
-                    text = subtitle,
-
-                    style = MaterialTheme.typography.labelSmall,
-
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-
-                    maxLines = 1,
-
-                    overflow = TextOverflow.Ellipsis
-
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(34.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 )
 
+                // Pillar 2: Spent This Cycle
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onTransactionsClick() }
+                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "SPENT",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.8.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = state.summary.netExpense.formatCompact(currency),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (state.summary.netExpense.isPositive()) AppExpense else MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "${state.summary.transactionCount} entries",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(34.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                )
+
+                // Pillar 3: Retained Savings
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onGoalsClick() }
+                        .padding(vertical = 2.dp),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "SAVINGS",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.8.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "+ ${state.savingsRatePercent}%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = AppSaving
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Retention rate",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f), thickness = 0.75.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Tactile Quick-Action Command Bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Button 1: + Expense
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onOpenQuickAdd() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Expense",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+
+                // Button 2: + Income
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onOpenQuickAdd() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ArrowDownward,
+                            contentDescription = null,
+                            tint = AppIncome,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Income",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Button 3: Transfer
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onOpenQuickAdd() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.SwapHoriz,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Transfer",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                // Button 4: Wallets
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable { onManageWalletsClick() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CreditCard,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Wallets",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
         }
-
     }
+}
 
+// =============================================================================
+//  2. ACCOUNT WALLETS HORIZONTAL CAROUSEL
+// =============================================================================
+
+@Composable
+private fun AccountWalletsStrip(
+    accounts: List<AccountBalanceItem>,
+    currencySymbol: String,
+    onManageWalletsClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (accounts.isEmpty()) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { onManageWalletsClick() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "Add account or wallet",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        } else {
+            // Individual Account Pills
+            accounts.forEach { item ->
+                val dotColor = parseHexColor(item.account.colorHex, 2)
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(dotColor)
+                        )
+                        Text(
+                            text = item.account.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = item.balance.formatCompact(currencySymbol),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (item.balance.isNegative()) expenseTextColor() else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+
+            // "+ Wallets & Setup" Action Chip
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { onManageWalletsClick() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Manage wallets and setup",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "Wallets & Setup",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+    }
 }
 
 // =============================================================================
@@ -1488,13 +1368,9 @@ private fun SpendingPulseChartCard(
                         Text(
 
                             text = if (previousWeekTotal.isPositive()) {
-
                                 previousWeekTotal.formatCompact(currencySymbol)
-
                             } else {
-
-                                "${safeDailyAllowance.formatCompact(currencySymbol)}/d"
-
+                                "${currencySymbol}${safeDailyAllowance.amountInMinorUnits / 100L} / day"
                             },
 
                             style = MaterialTheme.typography.titleMedium,
@@ -2050,699 +1926,463 @@ private fun SpendingPulseChartCard(
 }
 
 // =============================================================================
-
-//  4. CATEGORY DISTRIBUTION & BUDGET ALLOCATION DONUT RING + LEGEND
-
+//  4. CATEGORY DISTRIBUTION & BUDGET ALLOCATION DONUT RING + BREAKDOWN
 // =============================================================================
 
 @Composable
-
 private fun CategoryDonutBreakdownCard(
-
     spendingCategories: List<CategorySpend>,
-
     incomeCategories: List<CategorySpend>,
-
     debtCategories: List<CategorySpend>,
-
     totalSpent: MinorUnits,
-
     totalIncome: MinorUnits,
-
     totalDebt: MinorUnits,
-
     remainingBudget: MinorUnits,
-
     effectiveIncome: MinorUnits,
-
     currencySymbol: String,
-
     onNavigateToBudgets: () -> Unit
-
 ) {
-
     var activeModeIndex by remember { mutableIntStateOf(0) } // 0: Spending, 1: Income, 2: Debt
 
     val displaySlices = remember(activeModeIndex, spendingCategories, incomeCategories, debtCategories, totalSpent, totalIncome, totalDebt, remainingBudget, effectiveIncome) {
-
         when (activeModeIndex) {
-
             0 -> {
-
                 // SPENDING & BUDGET
-
                 if (spendingCategories.isNotEmpty()) {
-
                     val mutable = spendingCategories.toMutableList()
-
                     if (remainingBudget.isPositive()) {
-
                         val totalPool = (totalSpent + remainingBudget).amountInMinorUnits.coerceAtLeast(1L)
-
                         val normalized = mutable.map { cat ->
-
                             val pct = ((cat.amount.amountInMinorUnits.toDouble() / totalPool.toDouble()) * 100.0).toInt().coerceAtLeast(2)
-
                             cat.copy(percentage = pct)
-
                         }.toMutableList()
-
                         val remPct = (100 - normalized.sumOf { it.percentage }).coerceAtLeast(5)
-
                         normalized.add(
-
                             CategorySpend(
-
                                 categoryId = -1L,
-
                                 name = "Available budget",
-
                                 colorHex = "#10B981",
-
                                 iconName = "savings",
-
                                 amount = remainingBudget,
-
                                 percentage = remPct,
-
                                 transactionCount = 0
-
                             )
-
                         )
-
                         normalized
-
                     } else {
-
                         mutable
-
                     }
-
                 } else {
-
                     val avail = if (remainingBudget.isPositive()) remainingBudget else effectiveIncome
-
                     val unallocatedSavings = if (effectiveIncome > avail && avail.isPositive()) {
-
                         effectiveIncome - avail
-
                     } else {
-
                         MinorUnits(avail.amountInMinorUnits / 4L)
-
                     }
-
                     val availPct = if ((avail + unallocatedSavings).isPositive()) {
-
                         ((avail.amountInMinorUnits.toDouble() / (avail + unallocatedSavings).amountInMinorUnits.toDouble()) * 100.0).toInt().coerceIn(10, 90)
-
                     } else 75
-
                     listOf(
-
                         CategorySpend(
-
                             categoryId = -1L,
-
                             name = "Available budget",
-
                             colorHex = "#10B981",
-
                             iconName = "savings",
-
                             amount = avail,
-
                             percentage = availPct,
-
                             transactionCount = 0
-
                         ),
-
                         CategorySpend(
-
                             categoryId = -2L,
-
                             name = "Savings buffer",
-
                             colorHex = "#3B82F6",
-
                             iconName = "payments",
-
                             amount = unallocatedSavings,
-
                             percentage = (100 - availPct).coerceAtLeast(10),
-
                             transactionCount = 0
-
                         ),
-
                         CategorySpend(
-
                             categoryId = -3L,
-
                             name = "Spent so far",
-
                             colorHex = "#F59E0B",
-
                             iconName = "receipt",
-
                             amount = totalSpent,
-
                             percentage = 4,
-
                             transactionCount = 0
-
                         )
-
                     )
-
                 }
-
             }
-
             1 -> {
-
                 // INCOME
-
                 if (incomeCategories.isNotEmpty()) {
-
                     incomeCategories
-
                 } else {
-
                     listOf(
-
                         CategorySpend(
-
                             categoryId = -10L,
-
                             name = "Monthly Salary",
-
                             colorHex = "#10B981",
-
                             iconName = "payments",
-
                             amount = if (totalIncome.isPositive()) totalIncome else effectiveIncome,
-
                             percentage = 100,
-
                             transactionCount = 1
-
                         )
-
                     )
-
                 }
-
             }
-
             else -> {
-
                 // DEBTS & LOANS
-
                 if (debtCategories.isNotEmpty()) {
-
                     debtCategories
-
                 } else {
-
                     listOf(
-
                         CategorySpend(
-
                             categoryId = -20L,
-
-                            name = "No debts this cycle",
-
+                            name = "Zero Outstanding Debt",
                             colorHex = "#8B5CF6",
-
                             iconName = "handshake",
-
                             amount = totalDebt,
-
                             percentage = 100,
-
                             transactionCount = 0
-
                         )
-
                     )
-
                 }
-
             }
-
         }
-
     }
 
     var selectedSliceIndex by remember(displaySlices) { mutableIntStateOf(0) }
+    val isDebtsZero = activeModeIndex == 2 && debtCategories.isEmpty()
 
     Card(
-
         modifier = Modifier.fillMaxWidth(),
-
         shape = MaterialTheme.shapes.medium,
-
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-
         elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none)
-
     ) {
-
         Column(modifier = Modifier.padding(AppSpacing.md)) {
-
             // Header Row: Title & Action
-
             Row(
-
                 modifier = Modifier.fillMaxWidth(),
-
                 horizontalArrangement = Arrangement.SpaceBetween,
-
                 verticalAlignment = Alignment.CenterVertically
-
             ) {
-
                 val headerTitle = when (activeModeIndex) {
-
                     0 -> if (spendingCategories.isNotEmpty()) "Spending by Category & Budget" else "Cycle Budget Breakdown"
-
                     1 -> "Income sources & inflow"
-
                     else -> "Debts & loans breakdown"
-
                 }
-
                 Text(
-
                     text = headerTitle,
-
                     style = MaterialTheme.typography.titleMedium,
-
                     fontWeight = FontWeight.SemiBold,
-
                     color = MaterialTheme.colorScheme.onSurface
-
                 )
-
                 Text(
-
-                    text = "Budgets \u2192",
-
+                    text = "Budgets →",
                     style = MaterialTheme.typography.labelSmall,
-
                     fontWeight = FontWeight.SemiBold,
-
                     color = MaterialTheme.colorScheme.primary,
-
                     modifier = Modifier
-
                         .clip(MaterialTheme.shapes.small)
-
                         .clickable { onNavigateToBudgets() }
-
                         .padding(horizontal = 6.dp, vertical = 2.dp)
-
                 )
-
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // 3-Pill Interactive Category View Switcher (Spending | Income | Debts)
-
             Row(
-
                 modifier = Modifier
-
                     .fillMaxWidth()
-
                     .clip(RoundedCornerShape(10.dp))
-
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-
                     .padding(3.dp),
-
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
-
             ) {
-
                 val tabs = listOf(
-
                     Triple(0, "Spending", Color(0xFFF97316)),
-
                     Triple(1, "Income", Color(0xFF10B981)),
-
                     Triple(2, "Debts & Loans", Color(0xFF8B5CF6))
-
                 )
-
                 tabs.forEach { (modeIdx, label, themeColor) ->
-
                     val isSelected = activeModeIndex == modeIdx
-
                     Box(
-
                         modifier = Modifier
-
                             .weight(1f)
-
                             .clip(RoundedCornerShape(8.dp))
-
                             .background(if (isSelected) themeColor.copy(alpha = 0.16f) else Color.Transparent)
-
                             .border(
-
                                 width = if (isSelected) 1.5.dp else 0.dp,
-
                                 color = if (isSelected) themeColor else Color.Transparent,
-
                                 shape = RoundedCornerShape(8.dp)
-
                             )
-
                             .clickable {
-
                                 activeModeIndex = modeIdx
-
                                 selectedSliceIndex = 0
-
                             }
-
                             .padding(vertical = 6.dp),
-
                         contentAlignment = Alignment.Center
-
                     ) {
-
                         Text(
-
                             text = label,
-
                             style = MaterialTheme.typography.labelSmall,
-
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-
                             color = if (isSelected) themeColor else MaterialTheme.colorScheme.onSurfaceVariant
-
                         )
-
                     }
-
                 }
-
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
             val activeCat = displaySlices.getOrNull(selectedSliceIndex) ?: displaySlices.first()
 
-            Row(
-
-                modifier = Modifier.fillMaxWidth(),
-
-                verticalAlignment = Alignment.CenterVertically,
-
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg)
-
+            // Donut Chart centered with generous diameter (150dp, stroke 14dp -> inner hole 116dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                contentAlignment = Alignment.Center
             ) {
-
-                // Donut Chart with Center Callout
-
                 Box(
-
-                    modifier = Modifier.size(132.dp),
-
+                    modifier = Modifier.size(150.dp),
                     contentAlignment = Alignment.Center
-
                 ) {
-
                     val totalPct = displaySlices.sumOf { it.percentage }.coerceAtLeast(1)
-
-                    Canvas(modifier = Modifier.size(110.dp)) {
-
-                        val strokeWidth = 18.dp.toPx()
-
-                        val selectedStrokeWidth = 22.dp.toPx()
-
+                    Canvas(modifier = Modifier.size(144.dp)) {
+                        val strokeWidth = 14.dp.toPx()
+                        val selectedStrokeWidth = 17.dp.toPx()
                         val diameter = size.minDimension - selectedStrokeWidth
-
                         val topLeft = Offset(
-
                             (size.width - diameter) / 2f,
-
                             (size.height - diameter) / 2f
-
                         )
-
                         val arcSize = Size(diameter, diameter)
-
                         var startAngle = -90f
-
                         val gapDegrees = if (displaySlices.size > 1) 3f else 0f
 
                         displaySlices.forEachIndexed { index, cat ->
-
                             val sweep = ((cat.percentage.toFloat() / totalPct.toFloat()) * 360f - gapDegrees)
-
                                 .coerceAtLeast(5f)
-
                             val sliceColor = parseHexColor(cat.colorHex, index)
-
                             val isSelected = index == selectedSliceIndex
 
                             drawArc(
-
                                 color = sliceColor,
-
                                 startAngle = startAngle,
-
                                 sweepAngle = sweep,
-
                                 useCenter = false,
-
                                 topLeft = topLeft,
-
                                 size = arcSize,
-
                                 style = Stroke(
-
                                     width = if (isSelected) selectedStrokeWidth else strokeWidth,
-
                                     cap = StrokeCap.Butt
-
                                 )
-
                             )
-
                             startAngle += sweep + gapDegrees
-
                         }
-
                     }
 
-                    // Center Callout (Selected Slice Amount + Label)
-
+                    // Center Callout: Constrained to max 94dp within the 116dp hole!
+                    // Guaranteed NEVER to overlap or touch the progress ring.
                     Column(
-
                         horizontalAlignment = Alignment.CenterHorizontally,
-
-                        modifier = Modifier.padding(horizontal = 14.dp)
-
+                        modifier = Modifier
+                            .widthIn(max = 94.dp)
+                            .padding(horizontal = 4.dp)
                     ) {
-
                         Text(
-
                             text = activeCat.amount.formatCompact(currencySymbol),
-
-                            style = MaterialTheme.typography.titleSmall,
-
-                            fontWeight = FontWeight.Bold,
-
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSurface,
-
                             maxLines = 1,
-
                             overflow = TextOverflow.Ellipsis
-
                         )
-
-                        Text(
-
-                            text = activeCat.name,
-
-                            style = MaterialTheme.typography.labelSmall,
-
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-
-                            maxLines = 1,
-
-                            overflow = TextOverflow.Ellipsis
-
-                        )
-
-                        Text(
-
-                            text = "${activeCat.percentage}%",
-
-                            style = MaterialTheme.typography.labelSmall,
-
-                            fontWeight = FontWeight.Bold,
-
-                            color = parseHexColor(activeCat.colorHex, selectedSliceIndex)
-
-                        )
-
-                    }
-
-                }
-
-                // Interactive Category / Allocation Legend List
-
-                Column(
-
-                    modifier = Modifier.weight(1f),
-
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-
-                ) {
-
-                    displaySlices.forEachIndexed { idx, item ->
-
-                        val isSelected = idx == selectedSliceIndex
-
-                        val dotColor = parseHexColor(item.colorHex, idx)
-
-                        Row(
-
-                            modifier = Modifier
-
-                                .fillMaxWidth()
-
-                                .clip(RoundedCornerShape(8.dp))
-
-                                .background(
-
-                                    if (isSelected) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-
-                                    else Color.Transparent
-
-                                )
-
-                                .clickable { selectedSliceIndex = idx }
-
-                                .padding(horizontal = 8.dp, vertical = 5.dp),
-
-                            horizontalArrangement = Arrangement.SpaceBetween,
-
-                            verticalAlignment = Alignment.CenterVertically
-
-                        ) {
-
-                            Row(
-
-                                verticalAlignment = Alignment.CenterVertically,
-
-                                modifier = Modifier.weight(1f)
-
-                            ) {
-
-                                Box(
-
-                                    modifier = Modifier
-
-                                        .size(18.dp)
-
-                                        .clip(CircleShape)
-
-                                        .background(dotColor.copy(alpha = if (isSelected) 0.3f else 0.16f)),
-
-                                    contentAlignment = Alignment.Center
-
-                                ) {
-
-                                    Box(
-
-                                        modifier = Modifier
-
-                                            .size(7.dp)
-
-                                            .clip(CircleShape)
-
-                                            .background(dotColor)
-
-                                    )
-
-                                }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Text(
-
-                                    text = item.name,
-
-                                    style = MaterialTheme.typography.bodySmall,
-
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-
-                                    color = MaterialTheme.colorScheme.onSurface,
-
-                                    maxLines = 1,
-
-                                    overflow = TextOverflow.Ellipsis
-
-                                )
-
-                            }
-
-                            Row(
-
-                                verticalAlignment = Alignment.CenterVertically,
-
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-
-                            ) {
-
-                                Text(
-
-                                    text = item.amount.formatCompact(currencySymbol),
-
-                                    style = MaterialTheme.typography.labelMedium,
-
-                                    fontWeight = FontWeight.SemiBold,
-
-                                    color = MaterialTheme.colorScheme.onSurface
-
-                                )
-
-                                Text(
-
-                                    text = "${item.percentage}%",
-
-                                    style = MaterialTheme.typography.labelSmall,
-
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-
-                                )
-
-                            }
-
+                        val shortLabel = when {
+                            activeCat.name.contains("debt", ignoreCase = true) -> "Zero Debt"
+                            activeCat.name.contains("Available", ignoreCase = true) -> "Available"
+                            activeCat.name.contains("buffer", ignoreCase = true) -> "Buffer"
+                            activeCat.name.contains("Spent", ignoreCase = true) -> "Spent"
+                            activeCat.name.contains("Salary", ignoreCase = true) -> "Salary"
+                            activeCat.name.length > 10 -> activeCat.name.take(9) + "…"
+                            else -> activeCat.name
                         }
-
+                        Text(
+                            text = shortLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        val sliceColor = parseHexColor(activeCat.colorHex, selectedSliceIndex)
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = sliceColor.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "${activeCat.percentage}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = sliceColor,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
-
                 }
-
             }
 
+            Spacer(modifier = Modifier.height(14.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), thickness = 0.75.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Full-Width Category / Allocation Breakdown List
+            if (isDebtsZero) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = AppIncome.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, AppIncome.copy(alpha = 0.25f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(AppIncome.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .clip(CircleShape)
+                                    .background(AppIncome)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Zero Active Liabilities",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "All debts and loans are settled for this cycle.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    displaySlices.forEachIndexed { idx, item ->
+                        val isSelected = idx == selectedSliceIndex
+                        val sliceColor = parseHexColor(item.colorHex, idx)
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (isSelected) sliceColor.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { selectedSliceIndex = idx }
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .clip(CircleShape)
+                                                .background(sliceColor)
+                                        )
+                                        Text(
+                                            text = item.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = item.amount.formatCompact(currencySymbol),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = sliceColor.copy(alpha = 0.12f)
+                                        ) {
+                                            Text(
+                                                text = "${item.percentage}%",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = sliceColor,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // 4dp Rounded Horizontal Progress Bar
+                                val progress = (item.percentage.toFloat() / 100f).coerceIn(0f, 1f)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(progress)
+                                            .height(4.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(sliceColor)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-
     }
-
 }
 
 // =============================================================================//  5. BUDGET HEALTH & TREE OF HOPE GLANCE ROW
