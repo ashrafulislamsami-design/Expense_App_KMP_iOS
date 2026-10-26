@@ -650,7 +650,7 @@ private fun TreeOfHopeCard(report: FinancialReport) {
             Spacer(modifier = Modifier.width(14.dp))
             Column {
                 Text(
-                    text = "Tree of Hope: ${report.treeState.displayName} (Level ${report.treeLevel})",
+                    text = "Savings Health: ${report.treeState.displayName} (Tier ${report.treeLevel})",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = incomeTextColor()

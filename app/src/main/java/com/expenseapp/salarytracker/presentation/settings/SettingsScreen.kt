@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -99,6 +100,32 @@ fun SettingsScreen(
     val budgetAlertsEnabled by settingsRepository.isBudgetAlertsEnabled().collectAsStateWithLifecycle(initialValue = true)
     val goalNotificationsEnabled by settingsRepository.isGoalNotificationsEnabled().collectAsStateWithLifecycle(initialValue = true)
 
+    val userName by settingsRepository.getUserName().collectAsStateWithLifecycle(initialValue = "User")
+    val userAvatar by settingsRepository.getUserAvatar().collectAsStateWithLifecycle(initialValue = "avatar_1")
+
+    var showProfileDialog by remember { mutableStateOf(false) }
+    var editingName by remember(userName) { mutableStateOf(userName) }
+    var editingAvatar by remember(userAvatar) { mutableStateOf(userAvatar) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            scope.launch {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        val targetFile = context.filesDir.resolve("user_profile_photo.jpg")
+                        targetFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                        editingAvatar = "custom_photo"
+                        settingsRepository.setUserAvatar("custom_photo")
+                    }
+                }
+            }
+        }
+    }
+
     var showPasscodeSetupDialog by remember { mutableStateOf(false) }
     var showTimePickerDialog by remember { mutableStateOf(false) }
 
@@ -131,7 +158,69 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 0. Insights & Reports Hub
+            // 0. Personal User Profile
+            item {
+                Text(
+                    text = "Personal Profile",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            editingName = userName
+                            editingAvatar = userAvatar
+                            showProfileDialog = true
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            com.expenseapp.salarytracker.presentation.components.UserAvatarBadge(
+                                avatarString = userAvatar,
+                                userName = userName,
+                                size = 52.dp
+                            )
+                            Column {
+                                Text(
+                                    text = userName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                val preset = com.expenseapp.salarytracker.presentation.components.UserProfileDefaults.getPreset(userAvatar)
+                                Text(
+                                    text = if (userAvatar == "custom_photo") "Custom Photo Profile · Tap to edit" else "${preset.emoji} ${preset.name} · Tap to edit",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Outlined.ChevronRight,
+                            contentDescription = "Edit profile",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // 1. Insights & Reports Hub
             item {
                 Text(
                     text = "Insights & Data",
@@ -595,6 +684,117 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    // Profile Edit Dialog
+    if (showProfileDialog) {
+        val presets = com.expenseapp.salarytracker.presentation.components.UserProfileDefaults.PRESETS
+        AlertDialog(
+            onDismissRequest = { showProfileDialog = false },
+            title = {
+                Text(
+                    text = "Edit Personal Profile",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    com.expenseapp.salarytracker.presentation.components.UserAvatarBadge(
+                        avatarString = editingAvatar,
+                        userName = editingName,
+                        size = 64.dp
+                    )
+
+                    OutlinedTextField(
+                        value = editingName,
+                        onValueChange = { editingName = it },
+                        label = { Text("Display Name") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        text = "Choose Avatar Persona",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        presets.forEach { preset ->
+                            val isSelected = editingAvatar == preset.id
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) preset.backgroundColor else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                    .border(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable { editingAvatar = preset.id }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(preset.emoji, fontSize = 16.sp)
+                                    Text(preset.name, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                }
+                            }
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = { photoPickerLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Upload Photo from Gallery", fontSize = 13.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val finalName = editingName.trim().ifBlank { "User" }
+                            settingsRepository.setUserName(finalName)
+                            settingsRepository.setUserAvatar(editingAvatar)
+                            showProfileDialog = false
+                        }
+                    },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Save Changes", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showProfileDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showPasscodeSetupDialog) {

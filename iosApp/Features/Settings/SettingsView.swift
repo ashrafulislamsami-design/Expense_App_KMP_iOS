@@ -3,6 +3,12 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var securityManager = BiometricSecurityManager.shared
     
+    @AppStorage("userName") private var userName: String = "User"
+    @AppStorage("userAvatar") private var userAvatar: String = "🧑‍💻"
+    @State private var showingEditProfile = false
+    @State private var editNameText = ""
+    @State private var editAvatarEmoji = "🧑‍💻"
+    
     @AppStorage("salaryAmountMinor") private var salaryAmountMinor: Int = 8500000
     @AppStorage("salaryPayday") private var salaryPayday: Int = 1
     @AppStorage("reportingMode") private var reportingMode: String = "SALARY_CYCLE"
@@ -18,6 +24,38 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Personal Profile Section
+                Section(header: Text("Personal Profile").font(.caption).foregroundColor(AppColors.textSecondary)) {
+                    Button(action: {
+                        editNameText = userName
+                        editAvatarEmoji = userAvatar
+                        showingEditProfile = true
+                    }) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.15))
+                                    .frame(width: 48, height: 48)
+                                Text(userAvatar)
+                                    .font(.system(size: 24))
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(userName)
+                                    .font(.headline)
+                                    .foregroundColor(AppColors.textPrimary)
+                                Text("Tap to edit name and avatar persona")
+                                    .font(.caption2)
+                                    .foregroundColor(AppColors.textSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(AppColors.textSecondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                
                 // Security & Biometrics
                 Section(header: Text("Security & Privacy").font(.caption).foregroundColor(AppColors.textSecondary)) {
                     Toggle(isOn: Binding(
@@ -153,6 +191,68 @@ struct SettingsView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text("Your backup file is ready and matches the cross-platform specification.")
+            }
+            .sheet(isPresented: $showingEditProfile) {
+                NavigationStack {
+                    Form {
+                        Section(header: Text("Persona Avatar").font(.caption)) {
+                            HStack {
+                                Spacer()
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.blue.opacity(0.15))
+                                        .frame(width: 72, height: 72)
+                                    Text(editAvatarEmoji)
+                                        .font(.system(size: 38))
+                                }
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
+                                ForEach(["🧑‍💻", "💼", "🧑‍🚀", "🎨", "⚡", "🌿", "🦊", "💎"], id: \.self) { emoji in
+                                    Button(action: { editAvatarEmoji = emoji }) {
+                                        Text(emoji)
+                                            .font(.system(size: 28))
+                                            .padding(10)
+                                            .background(editAvatarEmoji == emoji ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(editAvatarEmoji == emoji ? Color.blue : Color.clear, lineWidth: 2)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        
+                        Section(header: Text("Display Name").font(.caption)) {
+                            TextField("Enter your name", text: $editNameText)
+                        }
+                    }
+                    .navigationTitle("Edit Profile")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                showingEditProfile = false
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save") {
+                                let trimmed = editNameText.trimmingCharacters(in: .whitespaces)
+                                if !trimmed.isEmpty {
+                                    userName = trimmed
+                                }
+                                userAvatar = editAvatarEmoji
+                                showingEditProfile = false
+                            }
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
             }
         }
     }

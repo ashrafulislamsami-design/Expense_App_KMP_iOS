@@ -24,7 +24,7 @@ struct TreeOfHopeView: View {
         }
     }
     
-    @State private var vitalityScore: Int = 88
+    @State private var healthScore: Int = 88
     @State private var stage: GrowthStage = .tree
     @State private var streakDays: Int = 14
     @State private var isWatering: Bool = false
@@ -79,7 +79,7 @@ struct TreeOfHopeView: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(AppColors.textPrimary)
                                 
-                                Text("\(vitalityScore)% Vitality")
+                                Text("\(healthScore)% Health Score")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(AppColors.incomeGreen)
@@ -156,7 +156,7 @@ struct TreeOfHopeView: View {
                 .padding(.bottom, SpacingTokens.lg)
             }
             .background(AppColors.background.ignoresSafeArea())
-            .navigationTitle("Tree of Hope")
+            .navigationTitle("Savings Momentum")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

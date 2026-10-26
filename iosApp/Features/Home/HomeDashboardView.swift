@@ -4,6 +4,8 @@ struct HomeDashboardView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     @State private var selectedTimeframe: String = "Current cycle"
+    @AppStorage("userName") private var userName: String = "User"
+    @AppStorage("userAvatar") private var userAvatar: String = "🧑‍💻"
     @State private var showingQuickAdd: Bool = false
     @State private var showingSetup: Bool = false
     @State private var donutMode: Int = 0
@@ -58,7 +60,7 @@ struct HomeDashboardView: View {
                         )
                     }
                     
-                    // 5. Budget Health & Tree of Hope Quick Glance
+                    // 5. Budget Health & Savings Momentum Quick Glance
                     budgetAndHopeRow
                     
                     // 6. Recent Activity Structured Ledger
@@ -72,10 +74,23 @@ struct HomeDashboardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Current cycle · \(daysRemaining)d left")
-                            .font(.caption2)
-                            .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
+                    HStack(spacing: 8) {
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.primary(for: colorScheme).opacity(0.15))
+                                .frame(width: 32, height: 32)
+                            Text(userAvatar)
+                                .font(.system(size: 16))
+                        }
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Hello, \(userName) 👋")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(AppColors.onSurface(for: colorScheme))
+                            Text("Cycle · \(daysRemaining)d left")
+                                .font(.caption2)
+                                .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
+                        }
                     }
                 }
                 
@@ -198,7 +213,7 @@ struct HomeDashboardView: View {
                 )
                 
                 KPICardView(
-                    title: "Saved & kept",
+                    title: "Retained Savings",
                     value: "+ \(savingsRate)%",
                     badgeText: "\(currencySymbol)15k",
                     isBadgePositive: true,
@@ -240,10 +255,10 @@ struct HomeDashboardView: View {
             .clipShape(AppShapes.medium)
             .overlay(AppShapes.medium.stroke(AppColors.border(for: colorScheme), lineWidth: 1))
             
-            // Tree of Hope Card
+            // Savings Momentum Card
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("Tree of Hope")
+                    Text("Savings Momentum")
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(AppColors.onSurface(for: colorScheme))
@@ -260,7 +275,7 @@ struct HomeDashboardView: View {
                 ProgressView(value: 0.78)
                     .tint(Color.appIncome)
                 
-                Text("78% vitality · 2 active goals")
+                Text("78% health score · 2 active goals")
                     .font(.caption2)
                     .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
             }
@@ -341,7 +356,7 @@ struct HomeDashboardView: View {
         default:
             return [
                 DonutSliceDTO(name: "Loan Received", amount: 300000, percentage: 60, color: Color.red),
-                DonutSliceDTO(name: "Borrowed Money", amount: 200000, percentage: 40, color: Color.orange)
+                DonutSliceDTO(name: "Borrowed Funds", amount: 200000, percentage: 40, color: Color.orange)
             ]
         }
     }

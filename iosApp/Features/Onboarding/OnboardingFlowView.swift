@@ -17,6 +17,11 @@ struct OnboardingFlowView: View {
     @State private var currentStep: Int = 1
     private let totalSteps: Int = 5
     
+    @AppStorage("userName") private var userName: String = "User"
+    @AppStorage("userAvatar") private var userAvatar: String = "🧑‍💻"
+    @State private var profileNameInput: String = "User"
+    @State private var selectedAvatarEmoji: String = "🧑‍💻"
+    
     // Form States
     @State private var selectedWallets: Set<String> = ["Cash", "BRAC Bank Astha", "bKash", "Card"]
     @State private var customWalletName: String = ""
@@ -75,59 +80,101 @@ struct OnboardingFlowView: View {
         }
     }
     
-    // Step 1: Welcome
+    // Step 1: Welcome & Profile Setup
     private var step1Welcome: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            
-            Image(systemName: "chart.line.uptrend.xyaxis.circle.fill")
-                .resizable()
-                .frame(width: 72, height: 72)
-                .foregroundColor(AppColors.primary(for: colorScheme))
-            
-            Text("Salary & Expense Command Center")
-                .font(.title2)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-                .foregroundColor(AppColors.onSurface(for: colorScheme))
-            
-            Text("Select all your wallets (BRAC Bank Astha, bKash, Cards, Bank, Cash), set your monthly budget, and track your mid-cycle spending at a glance.")
-                .font(.body)
-                .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Image(systemName: "lock.shield.fill")
-                        .foregroundColor(Color.appIncome)
-                    Text("100% Private & Offline-First")
+        ScrollView {
+            VStack(spacing: 16) {
+                Spacer(minLength: 8)
+                
+                Image(systemName: "chart.line.uptrend.xyaxis.circle.fill")
+                    .resizable()
+                    .frame(width: 56, height: 56)
+                    .foregroundColor(AppColors.primary(for: colorScheme))
+                
+                Text("Salary & Expense Command Center")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(AppColors.onSurface(for: colorScheme))
+                
+                // Profile Setup Card
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Personalize Your Profile")
                         .font(.subheadline)
                         .fontWeight(.bold)
+                        .foregroundColor(AppColors.onSurface(for: colorScheme))
+                    
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.primary(for: colorScheme).opacity(0.15))
+                                .frame(width: 48, height: 48)
+                            Text(selectedAvatarEmoji)
+                                .font(.system(size: 26))
+                        }
+                        
+                        TextField("Your Name or Moniker", text: $profileNameInput)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(["🧑‍💻", "💼", "🧑‍🚀", "🎨", "⚡", "🌿", "🦊", "💎"], id: \.self) { emoji in
+                                Button(action: { selectedAvatarEmoji = emoji }) {
+                                    Text(emoji)
+                                        .font(.system(size: 22))
+                                        .padding(8)
+                                        .background(selectedAvatarEmoji == emoji ? AppColors.primary(for: colorScheme).opacity(0.2) : AppColors.surfaceVariant(for: colorScheme))
+                                        .clipShape(Circle())
+                                        .overlay(
+                                            Circle()
+                                                .stroke(selectedAvatarEmoji == emoji ? AppColors.primary(for: colorScheme) : Color.clear, lineWidth: 2)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
                 }
-                Text("All your records remain stored exclusively on your device. No cloud sync, zero ads, zero internet telemetry.")
-                    .font(.caption)
-                    .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
+                .padding()
+                .background(AppColors.surface(for: colorScheme))
+                .clipShape(AppShapes.medium)
+                .overlay(AppShapes.medium.stroke(AppColors.border(for: colorScheme), lineWidth: 1))
+                .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Image(systemName: "lock.shield.fill")
+                            .foregroundColor(Color.appIncome)
+                        Text("100% Private & Offline-First")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                    }
+                    Text("All your records remain stored exclusively on your device. No cloud sync, zero ads, zero internet telemetry.")
+                        .font(.caption)
+                        .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
+                }
+                .padding()
+                .background(AppColors.surface(for: colorScheme))
+                .clipShape(AppShapes.medium)
+                .overlay(AppShapes.medium.stroke(AppColors.border(for: colorScheme), lineWidth: 1))
+                .padding(.horizontal)
+                
+                Spacer(minLength: 8)
+                
+                Button(action: { currentStep = 2 }) {
+                    Text("Get Started")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(AppColors.primary(for: colorScheme))
+                        .clipShape(AppShapes.medium)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 24)
             }
-            .padding()
-            .background(AppColors.surface(for: colorScheme))
-            .clipShape(AppShapes.medium)
-            .overlay(AppShapes.medium.stroke(AppColors.border(for: colorScheme), lineWidth: 1))
-            .padding(.horizontal)
-            
-            Spacer()
-            
-            Button(action: { currentStep = 2 }) {
-                Text("Get Started")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(AppColors.primary(for: colorScheme))
-                    .clipShape(AppShapes.medium)
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 24)
         }
     }
     
@@ -363,6 +410,7 @@ struct OnboardingFlowView: View {
                 .foregroundColor(AppColors.onSurface(for: colorScheme))
             
             VStack(spacing: 12) {
+                summaryRow(label: "Profile", value: "\(profileNameInput) (\(selectedAvatarEmoji))")
                 summaryRow(label: "Wallets", value: selectedWallets.joined(separator: ", "))
                 summaryRow(label: "Monthly Income", value: "৳\(monthlyIncome)")
                 summaryRow(label: "Payday", value: "\(selectedPayDay)\(ordinal(selectedPayDay)) of every month")
@@ -408,6 +456,10 @@ struct OnboardingFlowView: View {
     }
     
     private func finishOnboarding() {
+        if !profileNameInput.trimmingCharacters(in: .whitespaces).isEmpty {
+            userName = profileNameInput.trimmingCharacters(in: .whitespaces)
+        }
+        userAvatar = selectedAvatarEmoji
         if isPresentedAsSheet {
             dismiss()
         } else {

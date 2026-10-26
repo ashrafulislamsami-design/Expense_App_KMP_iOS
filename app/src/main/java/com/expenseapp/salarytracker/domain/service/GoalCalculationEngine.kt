@@ -301,7 +301,7 @@ class GoalCalculationEngine {
                 state = TreeState.SEED,
                 scorePercentage = 0.0,
                 stageName = TreeState.SEED.stageName,
-                explanation = "Your Tree of Hope is planted as a seed. Create your first savings, limit, or habit goal to watch it sprout!",
+                explanation = "Your savings foundation is established. Create your first savings target or spending limit to build momentum!",
                 positiveActionTip = "Tap '+' below to set your first financial goal.",
                 contributingFactors = listOf("No active goals currently set")
             )
@@ -344,7 +344,7 @@ class GoalCalculationEngine {
             TreeState.GROWING -> "Stay within your cycle budget to reach full maturity."
             TreeState.MATURE -> "You're close to full bloom! Keep up consistent habits."
             TreeState.FLOWERING -> "Final push: complete your remaining target to bear fruit."
-            TreeState.FRUIT_BEARING -> "Incredible discipline! Your Tree of Hope is in full harvest."
+            TreeState.FRUIT_BEARING -> "Incredible discipline! Your financial runway and savings habits are at peak strength."
         }
 
         val explanation = when (state) {

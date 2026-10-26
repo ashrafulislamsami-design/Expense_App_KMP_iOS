@@ -38,14 +38,14 @@ data class GoalsUiState(
         state = TreeState.SEED,
         scorePercentage = 0.0,
         stageName = "Seed",
-        explanation = "Plant your financial goals to grow your Tree of Hope.",
-        positiveActionTip = "Create a goal to begin.",
+        explanation = "Define your financial targets to build steady savings momentum.",
+        positiveActionTip = "Create your first savings goal to begin.",
         contributingFactors = emptyList()
     ),
     val treeHistory: List<TreeHistory> = emptyList(),
     val categories: List<Category> = emptyList(),
     val accounts: List<Account> = emptyList(),
-    val currencySymbol: String = "৳"
+    val currencySymbol: String = "\u09F3"
 )
 
 class GoalsViewModel(

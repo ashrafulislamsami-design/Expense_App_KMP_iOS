@@ -74,7 +74,7 @@ class PdfReportEngine {
 
         // 2. Tree of Hope Card
         checkPageBreak(70f)
-        drawSectionTitle(currentStream, "2. Financial Health (Tree of Hope)", currentY)
+        drawSectionTitle(currentStream, "2. Financial Health & Savings Momentum", currentY)
         currentY -= 18f
         drawTreeCard(currentStream, report, currentY)
         currentY -= 55f
@@ -242,7 +242,7 @@ class PdfReportEngine {
     fun escapePdfText(input: String): String {
         val ascii = input.map { ch ->
             when (ch) {
-                '৳' -> "Tk "
+                '\u09F3' -> "Tk "
                 '(' -> "\\("
                 ')' -> "\\)"
                 '\\' -> "\\\\"
@@ -250,10 +250,11 @@ class PdfReportEngine {
                 else -> {
                     // Normalize or transliterate non-ASCII Unicode to printable ASCII
                     when (ch) {
-                        '—' -> "-"
-                        '–' -> "-"
-                        '“', '”' -> "\""
-                        '‘', '’' -> "'"
+                        '\u2013', '\u2014' -> "-"
+                        '\u201C', '\u201D' -> "\""
+                        '\u2018', '\u2019' -> "'"
+                        '\u00B7' -> " - "
+                        '\u2192' -> " -> "
                         else -> {
                             val code = ch.code
                             if (code < 128) ch.toString() else "?"

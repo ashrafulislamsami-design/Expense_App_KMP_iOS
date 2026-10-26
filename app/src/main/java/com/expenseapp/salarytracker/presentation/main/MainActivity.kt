@@ -86,7 +86,7 @@ class MainActivity : FragmentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 securityViewModel.uiState.collect { state ->
-                    if (state.isScreenshotProtectionEnabled) {
+                    if (state.isScreenshotProtectionEnabled && !com.expenseapp.salarytracker.BuildConfig.DEBUG) {
                         window.setFlags(
                             WindowManager.LayoutParams.FLAG_SECURE,
                             WindowManager.LayoutParams.FLAG_SECURE

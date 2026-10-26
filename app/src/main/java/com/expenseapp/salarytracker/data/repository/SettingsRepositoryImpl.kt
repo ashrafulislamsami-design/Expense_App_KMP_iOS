@@ -118,4 +118,18 @@ class SettingsRepositoryImpl(
     override suspend fun setCompletedOnboarding(completed: Boolean) {
         dao.setSetting(UserSettingEntity("has_completed_onboarding", completed.toString()))
     }
+
+    override fun getUserName(): Flow<String> =
+        dao.getSetting("user_name").map { it?.takeIf { s -> s.isNotBlank() } ?: "User" }
+
+    override suspend fun setUserName(name: String) {
+        dao.setSetting(UserSettingEntity("user_name", name.trim()))
+    }
+
+    override fun getUserAvatar(): Flow<String> =
+        dao.getSetting("user_avatar").map { it?.takeIf { s -> s.isNotBlank() } ?: "avatar_1" }
+
+    override suspend fun setUserAvatar(avatar: String) {
+        dao.setSetting(UserSettingEntity("user_avatar", avatar.trim()))
+    }
 }

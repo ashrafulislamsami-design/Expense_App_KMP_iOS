@@ -43,7 +43,7 @@ data class Category(
         val DEFAULT_DEBT_CATEGORIES = listOf(
             Category(name = "Loan Received", iconName = "account_balance_wallet", colorHex = "#E11D48", sortOrder = 25),
             Category(name = "Debt Repayment", iconName = "credit_card", colorHex = "#F97316", sortOrder = 26),
-            Category(name = "Borrowed Money", iconName = "handshake", colorHex = "#8B5CF6", sortOrder = 27),
+            Category(name = "Borrowed Funds / Loans", iconName = "handshake", colorHex = "#8B5CF6", sortOrder = 27),
             Category(name = "Salary Advance", iconName = "receipt_long", colorHex = "#DC2626", sortOrder = 28),
             Category(name = "Loan Given", iconName = "payments", colorHex = "#0284C7", sortOrder = 29),
             Category(name = "Debt", iconName = "credit_card", colorHex = "#DC2626", sortOrder = 30)

@@ -39,7 +39,7 @@ struct GoalsListView: View {
                 .padding(.vertical, SpacingTokens.md)
             }
             .background(AppColors.background.ignoresSafeArea())
-            .navigationTitle("Goals & Tree of Hope")
+            .navigationTitle("Goals & Savings Momentum")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddGoal = true }) {
@@ -95,7 +95,7 @@ struct TreeOfHopeBannerCard: View {
                 
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
-                        Text("Tree of Hope")
+                        Text("Savings Momentum")
                             .font(.headline)
                             .foregroundColor(AppColors.textPrimary)
                         Text("Vibrant")
@@ -108,7 +108,7 @@ struct TreeOfHopeBannerCard: View {
                             .clipShape(Capsule())
                     }
                     
-                    Text("Vitality: 88% • 14-day spending discipline streak")
+                    Text("Health Score: 88% • 14-day spending discipline streak")
                         .font(.caption)
                         .foregroundColor(AppColors.textSecondary)
                 }

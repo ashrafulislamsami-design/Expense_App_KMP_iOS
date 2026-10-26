@@ -76,6 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.expenseapp.salarytracker.ExpenseApplication
 import com.expenseapp.salarytracker.data.entity.AccountEntity
@@ -130,6 +131,10 @@ fun OnboardingScreen(
     val currency by app.settingsRepository.getCurrency().collectAsStateWithLifecycle(initialValue = "BDT")
     val currencySymbol = if (currency.equals("BDT", ignoreCase = true)) "৳" else "$"
 
+    // Step 1: Profile state
+    var userNameInput by remember { mutableStateOf("") }
+    var selectedAvatarId by remember { mutableStateOf("avatar_1") }
+
     // Step 2: Multi-Wallet selection state
     val availablePresets = remember {
         mutableStateListOf<WalletPresetOption>().apply { addAll(DEFAULT_WALLET_PRESETS) }
@@ -157,6 +162,10 @@ fun OnboardingScreen(
     val completeSetupAndProceed = { openAddExpense: Boolean ->
         scope.launch {
             val today = LocalDate.now()
+
+            // 0. Save user profile
+            app.settingsRepository.setUserName(userNameInput.trim().ifBlank { "User" })
+            app.settingsRepository.setUserAvatar(selectedAvatarId)
 
             // 1. Update salary cycle config
             val currentConfig = app.settingsRepository.getSalaryCycleConfig().first()
@@ -354,6 +363,10 @@ fun OnboardingScreen(
             ) { step ->
                 when (step) {
                     1 -> Step1Welcome(
+                        userName = userNameInput,
+                        onUserNameChange = { userNameInput = it },
+                        selectedAvatarId = selectedAvatarId,
+                        onAvatarSelect = { selectedAvatarId = it },
                         onGetStarted = { currentStep = 2 }
                     )
                     2 -> Step2SelectMultipleWallets(
@@ -458,6 +471,8 @@ fun OnboardingScreen(
                         selectedPayDay = selectedPayDay,
                         spendingLimitInput = if (hasSpendingLimit) spendingLimitInput else "",
                         alreadySpentInput = alreadySpentInput,
+                        userName = userNameInput.ifBlank { "User" },
+                        selectedAvatarId = selectedAvatarId,
                         onGoToDashboard = { completeSetupAndProceed(false) },
                         onAddFirstExpense = { completeSetupAndProceed(true) }
                     )
@@ -471,89 +486,158 @@ fun OnboardingScreen(
 //  STEP 1: Welcome
 // =============================================================================
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Step1Welcome(
+    userName: String,
+    onUserNameChange: (String) -> Unit,
+    selectedAvatarId: String,
+    onAvatarSelect: (String) -> Unit,
     onGetStarted: () -> Unit
 ) {
+    val presets = com.expenseapp.salarytracker.presentation.components.UserProfileDefaults.PRESETS
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Savings,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(36.dp)
-            )
-        }
+        Spacer(modifier = Modifier.height(4.dp))
 
-        Spacer(modifier = Modifier.height(AppSpacing.lg))
+        // Selected Avatar Preview
+        com.expenseapp.salarytracker.presentation.components.UserAvatarBadge(
+            avatarString = selectedAvatarId,
+            userName = userName,
+            size = 72.dp
+        )
 
         Text(
-            text = "Salary & Expense Command Center",
-            style = MaterialTheme.typography.headlineMedium,
+            text = "Welcome to Expense Command Center",
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-
         Text(
-            text = "Select all your wallets (BRAC Bank Astha, bKash, Cards, Bank, Cash), set your monthly budget, and track your mid-cycle spending at a glance.",
-            style = MaterialTheme.typography.bodyLarge,
+            text = "Personalize your profile and take command of your salary cycles, multiple wallets, and spending limits.",
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = AppSpacing.md)
+            modifier = Modifier.padding(horizontal = AppSpacing.sm)
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
-
+        // Profile Card
         Card(
-            shape = MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.large,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(AppSpacing.md)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            Column(
+                modifier = Modifier.padding(AppSpacing.md),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "WHAT SHOULD WE CALL YOU?",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                OutlinedTextField(
+                    value = userName,
+                    onValueChange = onUserNameChange,
+                    placeholder = { Text("e.g. Alex, Imran, Sam...") },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "CHOOSE YOUR AVATAR PERSONA",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Shield,
-                        contentDescription = null,
-                        tint = AppIncome,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    presets.forEach { preset ->
+                        val isSelected = preset.id == selectedAvatarId
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) preset.backgroundColor else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                .border(
+                                    width = if (isSelected) 2.dp else 1.dp,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { onAvatarSelect(preset.id) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(preset.emoji, fontSize = 18.sp)
+                                Text(
+                                    preset.name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Privacy Guarantee Card
+        Card(
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(AppSpacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Shield,
+                    contentDescription = null,
+                    tint = AppIncome,
+                    modifier = Modifier.size(22.dp)
+                )
+                Column {
                     Text(
-                        text = "100% Private & Offline-First",
+                        text = "100% Offline & Private",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    Text(
+                        text = "Your profile, wallets, and finances stay strictly on this device.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Spacer(modifier = Modifier.height(AppSpacing.xs))
-                Text(
-                    text = "All your wallets, budgets, and charts stay strictly on your phone. No cloud sync, no internet permission, and zero ads.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = onGetStarted,
@@ -563,10 +647,12 @@ private fun Step1Welcome(
             shape = MaterialTheme.shapes.medium,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Set up my wallets & budget", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Continue to Wallet Setup", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -1229,6 +1315,8 @@ private fun Step5SummaryAndFinish(
     selectedPayDay: Int,
     spendingLimitInput: String,
     alreadySpentInput: String,
+    userName: String = "User",
+    selectedAvatarId: String = "avatar_1",
     onGoToDashboard: () -> Unit,
     onAddFirstExpense: () -> Unit
 ) {
@@ -1290,6 +1378,8 @@ private fun Step5SummaryAndFinish(
                 modifier = Modifier.padding(AppSpacing.md),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                val avatarPreset = com.expenseapp.salarytracker.presentation.components.UserProfileDefaults.getPreset(selectedAvatarId)
+                SummaryRowItem("Profile", "$userName (${avatarPreset.emoji} ${avatarPreset.name})")
                 SummaryRowItem("Selected Wallets (${selectedWallets.size})", selectedWallets.joinToString(", "))
                 SummaryRowItem("Monthly Salary", incomeMinor.formatCompactOnboarding(currencySymbol))
                 SummaryRowItem("Salary Payday", "${selectedPayDay}${getOrdinalSuffix(selectedPayDay)} of every month")

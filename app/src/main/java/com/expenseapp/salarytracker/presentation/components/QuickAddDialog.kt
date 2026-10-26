@@ -141,7 +141,7 @@ fun QuickAddDialog(
     categories: List<Category>,
     accounts: List<Account>,
     customFields: List<CustomField> = emptyList(),
-    currencySymbol: String = "৳",
+    currencySymbol: String = "\u09F3",
     onDismiss: () -> Unit,
     onSaveTransaction: (Transaction) -> Unit,
     onSaveRecurringRule: ((RecurringRule) -> Unit)? = null
@@ -226,14 +226,14 @@ fun QuickAddDialog(
                 // 1. TOP HEADER (Plain language)
                 val headerTitle = when (selectedType) {
                     TransactionType.EXPENSE -> "Add expense"
-                    TransactionType.INCOME -> "Money received"
-                    TransactionType.TRANSFER -> "Move money"
+                    TransactionType.INCOME -> "Add Income"
+                    TransactionType.TRANSFER -> "Transfer Between Accounts"
                     TransactionType.REFUND -> "Refund"
-                    TransactionType.SAVING -> "Money saved"
+                    TransactionType.SAVING -> "Deposit to Savings"
                     TransactionType.DONATION -> "Donation"
-                    TransactionType.DEBT_PAYMENT -> "Debt paid"
-                    TransactionType.DEBT_RECEIVED -> "Debt received"
-                    TransactionType.ADJUSTMENT -> "Fix balance"
+                    TransactionType.DEBT_PAYMENT -> "Debt Repayment"
+                    TransactionType.DEBT_RECEIVED -> "Debt Borrowed / Inflow"
+                    TransactionType.ADJUSTMENT -> "Balance Adjustment"
                 }
 
                 Row(
@@ -243,7 +243,7 @@ fun QuickAddDialog(
                 ) {
                     Column {
                         Text(
-                            text = if (selectedType == TransactionType.EXPENSE) "Record spending in seconds" else "Track your money movements",
+                            text = if (selectedType == TransactionType.EXPENSE) "Record spending in seconds" else "Log transactions and income",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -484,14 +484,6 @@ fun QuickAddDialog(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = currencySymbol,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = AppSpacing.xs)
-                            )
-
                             OutlinedTextField(
                                 value = amountInput,
                                 onValueChange = { input ->
@@ -499,6 +491,15 @@ fun QuickAddDialog(
                                         amountInput = input
                                         validationError = null
                                     }
+                                },
+                                prefix = {
+                                    Text(
+                                        text = currencySymbol,
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
                                 },
                                 placeholder = {
                                     Text(
@@ -518,7 +519,8 @@ fun QuickAddDialog(
                                 ),
                                 textStyle = MaterialTheme.typography.headlineLarge.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -839,13 +841,13 @@ fun QuickAddDialog(
                 val saveButtonText = when (selectedType) {
                     TransactionType.EXPENSE -> "Save expense"
                     TransactionType.INCOME -> "Save income"
-                    TransactionType.TRANSFER -> "Move money"
+                    TransactionType.TRANSFER -> "Confirm Transfer"
                     TransactionType.REFUND -> "Save refund"
-                    TransactionType.SAVING -> "Save money"
+                    TransactionType.SAVING -> "Save to Goals"
                     TransactionType.DONATION -> "Save donation"
-                    TransactionType.DEBT_PAYMENT -> "Save debt payment"
-                    TransactionType.DEBT_RECEIVED -> "Save debt received"
-                    TransactionType.ADJUSTMENT -> "Fix balance"
+                    TransactionType.DEBT_PAYMENT -> "Record Repayment"
+                    TransactionType.DEBT_RECEIVED -> "Record Debt Inflow"
+                    TransactionType.ADJUSTMENT -> "Apply Adjustment"
                 }
 
                 Button(

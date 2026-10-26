@@ -317,12 +317,12 @@ fun TreeOfHopeCard(treeStatus: TreeOfHopeStatus) {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Tree of Hope",
+                            text = "Savings Momentum",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Stage: ${treeStatus.stageName} (Level ${treeStatus.state.level} of 7)",
+                            text = "Discipline: ${treeStatus.stageName} (Tier ${treeStatus.state.level} of 7)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -335,7 +335,7 @@ fun TreeOfHopeCard(treeStatus: TreeOfHopeStatus) {
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Text(
-                        text = "${String.format("%.0f", treeStatus.scorePercentage)}% Vitality",
+                        text = "${String.format("%.0f", treeStatus.scorePercentage)}% Health Score",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,

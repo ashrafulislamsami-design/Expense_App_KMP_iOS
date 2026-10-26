@@ -330,8 +330,8 @@ fun TransactionsScreen(
                     } else {
                         EmptyStateView(
                             title = "No activity yet",
-                            message = "Your expenses and other money movements will appear here.",
-                            actionButtonText = "Add expense",
+                            message = "Your expenses, income, and transfers will appear here.",
+                            actionButtonText = "Log transaction",
                             onActionClick = onOpenAddTransaction
                         )
                     }
@@ -693,13 +693,16 @@ fun LedgerTransactionRow(
 
             Spacer(modifier = Modifier.width(AppSpacing.md))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = transaction.note.ifBlank { transaction.type.displayName },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     if (tokens.isRefund) {
                         Spacer(modifier = Modifier.width(AppSpacing.xs))
@@ -726,14 +729,17 @@ fun LedgerTransactionRow(
                 Text(
                     text = metaDetails,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+            modifier = Modifier.padding(start = AppSpacing.sm)
         ) {
             val amountFormatted = "${tokens.amountPrefix}${transaction.amount.format()}"
             Text(

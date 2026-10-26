@@ -53,7 +53,7 @@ struct DonutChartView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(centerCustomLabel ?? "Where money went & budget")
+            Text(centerCustomLabel ?? "Category Breakdown & Budget")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(AppColors.onSurface(for: colorScheme))

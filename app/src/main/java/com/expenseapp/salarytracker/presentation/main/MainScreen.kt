@@ -231,6 +231,15 @@ fun MainScreen(
                     onNavigateToSetup = {
                         navController.navigate(Screen.Onboarding.route)
                     },
+                    onNavigateToSettings = {
+                        navController.navigate(Screen.Settings.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onOpenQuickAdd = { showQuickAddDialog = true }
                 )
             }

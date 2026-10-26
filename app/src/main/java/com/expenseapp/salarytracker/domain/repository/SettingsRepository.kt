@@ -2,6 +2,7 @@ package com.expenseapp.salarytracker.domain.repository
 
 import com.expenseapp.salarytracker.domain.model.SalaryCycleConfig
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 interface SettingsRepository {
     fun getSalaryCycleConfig(): Flow<SalaryCycleConfig>
@@ -22,4 +23,10 @@ interface SettingsRepository {
     suspend fun setGoalNotificationsEnabled(enabled: Boolean)
     fun hasCompletedOnboarding(): Flow<Boolean>
     suspend fun setCompletedOnboarding(completed: Boolean)
+
+    // User Profile
+    fun getUserName(): Flow<String> = flowOf("User")
+    suspend fun setUserName(name: String) {}
+    fun getUserAvatar(): Flow<String> = flowOf("avatar_1")
+    suspend fun setUserAvatar(avatar: String) {}
 }

@@ -15,8 +15,8 @@ struct QuickAddExpenseSheet: View {
     enum TransactionType: String, CaseIterable, Identifiable {
         case expense = "Expense"
         case income = "Income"
-        case debtReceived = "Debt Received"
-        case debtPaid = "Debt Paid"
+        case debtReceived = "Debt Inflow"
+        case debtPaid = "Debt Repayment"
         case transfer = "Transfer"
         
         var id: String { rawValue }
@@ -46,7 +46,7 @@ struct QuickAddExpenseSheet: View {
     
     let debtCategories: [(name: String, icon: String, color: Color)] = [
         ("Loan Received", "arrow.down.left.circle.fill", .red),
-        ("Borrowed Money", "person.2.fill", .purple),
+        ("Borrowed Funds", "person.2.fill", .purple),
         ("Debt Repayment", "creditcard.fill", .orange),
         ("Salary Advance", "banknote.fill", .blue),
         ("Other Debt", "ellipsis.circle.fill", .gray)
@@ -161,7 +161,7 @@ struct QuickAddExpenseSheet: View {
                     DatePicker("Date & Time", selection: $date)
                 }
             }
-            .navigationTitle(transactionType == .expense ? "Add Expense" : (transactionType == .income ? "Add Income" : (transactionType == .debtReceived ? "Debt Received" : (transactionType == .debtPaid ? "Debt Repayment" : "Transfer"))))
+            .navigationTitle(transactionType == .expense ? "Add Expense" : (transactionType == .income ? "Add Income" : (transactionType == .debtReceived ? "Record Debt Inflow" : (transactionType == .debtPaid ? "Record Debt Repayment" : "Transfer"))))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

@@ -105,7 +105,9 @@ data class DashboardUiState(
     val cycleStartDate: LocalDate = LocalDate.now(),
     val cycleEndDate: LocalDate = LocalDate.now(),
     val daysRemaining: Long = 0,
-    val currencySymbol: String = "৳"
+    val currencySymbol: String = "\u09F3",
+    val userName: String = "User",
+    val userAvatar: String = "avatar_1"
 )
 
 private data class CoreFlowBundle(
@@ -144,11 +146,17 @@ class DashboardViewModel(
         CoreFlowBundle(config, budgets, goals, allTx, allCategories)
     }
 
+    private val profileFlow = combine(
+        settingsRepository.getUserName(),
+        settingsRepository.getUserAvatar()
+    ) { name, avatar -> Pair(name, avatar) }
+
     val uiState: StateFlow<DashboardUiState> = combine(
         coreBundleFlow,
         accountRepository.getAllAccounts(),
-        selectedTimeframeFlow
-    ) { bundle: CoreFlowBundle, allAccounts: List<Account>, timeframe: DashboardTimeframe ->
+        selectedTimeframeFlow,
+        profileFlow
+    ) { bundle: CoreFlowBundle, allAccounts: List<Account>, timeframe: DashboardTimeframe, profile: Pair<String, String> ->
         val today = LocalDate.now()
         val config = bundle.config
         val budgets = bundle.budgets
@@ -186,7 +194,7 @@ class DashboardViewModel(
         }
 
         val periodFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
-        val periodLabel = "${activeStart.format(periodFormatter)} – ${activeEnd.format(periodFormatter)}"
+        val periodLabel = "${activeStart.format(periodFormatter)} \u2013 ${activeEnd.format(periodFormatter)}"
 
         // Filter transactions strictly within active and previous periods
         val periodTx = allTx.filter { !it.date.isBefore(activeStart) && !it.date.isAfter(activeEnd) }
@@ -450,12 +458,14 @@ class DashboardViewModel(
             cycleEndDate = cycleWindow.endDate,
             daysRemaining = cycleWindow.remainingDays(today),
             currencySymbol = when (config.currency.uppercase()) {
-                "BDT" -> "৳"
+                "BDT" -> "\u09F3"
                 "USD" -> "$"
                 "EUR" -> "€"
                 "GBP" -> "£"
                 else -> config.currency
-            }
+            },
+            userName = profile.first,
+            userAvatar = profile.second
         )
     }.stateIn(
         scope = viewModelScope,
