@@ -2351,7 +2351,7 @@ private fun CategoryDonutBreakdownCard(
 
                 Text(
 
-                    text = "Budgets â†’",
+                    text = "Budgets \u2192",
 
                     style = MaterialTheme.typography.labelSmall,
 
@@ -2483,7 +2483,7 @@ private fun CategoryDonutBreakdownCard(
 
                     val totalPct = displaySlices.sumOf { it.percentage }.coerceAtLeast(1)
 
-                    Canvas(modifier = Modifier.size(120.dp)) {
+                    Canvas(modifier = Modifier.size(110.dp)) {
 
                         val strokeWidth = 18.dp.toPx()
 
@@ -2721,7 +2721,7 @@ private fun CategoryDonutBreakdownCard(
 
                                 Text(
 
-                                    text = "%",
+                                    text = "${item.percentage}%",
 
                                     style = MaterialTheme.typography.labelSmall,
 
