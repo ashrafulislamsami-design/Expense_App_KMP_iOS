@@ -325,6 +325,24 @@ struct HomeDashboardView: View {
         }
     }
     
+    private func walletItem(name: String, amount: Int64, color: Color) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 6, height: 6)
+            Text(name)
+                .font(.caption2)
+                .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
+            Text("\(currencySymbol)\(amount / 100)")
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundColor(AppColors.onSurface(for: colorScheme))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(AppColors.surface(for: colorScheme))
+        .clipShape(AppShapes.small)
+        .overlay(AppShapes.small.stroke(AppColors.border(for: colorScheme), lineWidth: 1))
+    }
+    
     private var budgetAndHopeRow: some View {
         HStack(spacing: 8) {
             // Budget Health Card
