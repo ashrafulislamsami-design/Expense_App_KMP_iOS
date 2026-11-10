@@ -42,7 +42,7 @@ jobs:
 
   ios-simulator-build-and-test:
     name: macOS iOS Simulator Build & Test
-    runs-on: macos-latest
+    runs-on: macos-13
     needs: shared-and-android
     steps:
       - name: Checkout Repository
