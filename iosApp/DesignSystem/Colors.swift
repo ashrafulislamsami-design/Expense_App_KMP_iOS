@@ -74,6 +74,10 @@ struct AppColors {
         scheme == .dark ? Color(red: 133/255, green: 195/255, blue: 166/255) : Color(red: 27/255, green: 56/255, blue: 43/255)
     }
     
+    static func onPrimary(for scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color(red: 24/255, green: 27/255, blue: 25/255) : Color.white
+    }
+    
     static func border(for scheme: ColorScheme) -> Color {
         scheme == .dark ? Color.white.opacity(0.10) : Color(red: 232/255, green: 228/255, blue: 220/255)
     }
