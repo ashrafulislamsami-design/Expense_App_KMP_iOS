@@ -70,8 +70,6 @@ struct HomeDashboardView: View {
                 .padding(.vertical, AppSpacing.sm)
             }
             .background(AppColors.background(for: colorScheme))
-            .navigationTitle("Dashboard")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: 8) {
@@ -87,6 +85,7 @@ struct HomeDashboardView: View {
                                 .font(.subheadline)
                                 .fontWeight(.bold)
                                 .foregroundColor(AppColors.onSurface(for: colorScheme))
+                                .lineLimit(1)
                             Text("Cycle · \(daysRemaining)d left")
                                 .font(.caption2)
                                 .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
@@ -97,7 +96,7 @@ struct HomeDashboardView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: { showingQuickAdd = true }) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.title3)
+                            .font(.system(size: 22, weight: .semibold))
                             .foregroundColor(AppColors.primary(for: colorScheme))
                     }
                 }
@@ -108,6 +107,24 @@ struct HomeDashboardView: View {
             .sheet(isPresented: $showingSetup) {
                 OnboardingFlowView(isPresentedAsSheet: true)
             }
+            .onAppear(perform: loadDataFromDatabase)
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DatabaseDataChanged"))) { _ in
+                loadDataFromDatabase()
+            }
+        }
+    }
+    
+    private func loadDataFromDatabase() {
+        let db = DatabaseManager.shared
+        let net = db.fetchNetBalanceMinor()
+        let spent = db.fetchTotalSpentMinor()
+        
+        // If transactions exist, reflect them dynamically
+        if net != 0 || spent != 0 {
+            totalNetBalance = net
+            periodSpent = spent
+            availableBudget = max(0, 3500000 - spent)
+            safeToday = max(0, availableBudget / Int64(max(1, daysRemaining)))
         }
     }
     

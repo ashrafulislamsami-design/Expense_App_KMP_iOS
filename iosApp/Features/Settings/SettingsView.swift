@@ -19,7 +19,8 @@ struct SettingsView: View {
     @State private var showingEncryptDialog = false
     @State private var encryptionPassword = ""
     @State private var backupFileURL: URL? = nil
-    @State private var showingShareSheet = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = true
+    @State private var showingResetAlert = false
     
     var body: some View {
         NavigationStack {
@@ -103,8 +104,9 @@ struct SettingsView: View {
                     }
                     
                     Picker("Reporting Mode", selection: $reportingMode) {
-                        Text("Salary Cycle (e.g. \(salaryPayday)st to \(salaryPayday == 1 ? 31 : salaryPayday - 1)th)").tag("SALARY_CYCLE")
-                        Text("Standard Calendar Month (1st to end)").tag("CALENDAR_MONTH")
+                        let endDay = salaryPayday == 1 ? 31 : salaryPayday - 1
+                        Text("Salary Cycle (\(salaryPayday)\(daySuffix(salaryPayday)) – \(endDay)\(daySuffix(endDay)))").tag("SALARY_CYCLE")
+                        Text("Calendar Month (1st – End)").tag("CALENDAR_MONTH")
                     }
                 }
                 
@@ -176,6 +178,21 @@ struct SettingsView: View {
                             .foregroundColor(AppColors.textSecondary)
                     }
                 }
+                
+                // Reset / Clean Slate
+                Section(header: Text("Danger Zone").font(.caption).foregroundColor(AppColors.expenseRed)) {
+                    Button(role: .destructive, action: {
+                        showingResetAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "trash.circle.fill")
+                                .foregroundColor(AppColors.expenseRed)
+                            Text("Reset All Data & Start Over")
+                                .fontWeight(.semibold)
+                                .foregroundColor(AppColors.expenseRed)
+                        }
+                    }
+                }
             }
             .navigationTitle("Settings")
             .alert("Encrypted Backup", isPresented: $showingEncryptDialog) {
@@ -191,6 +208,15 @@ struct SettingsView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text("Your backup file is ready and matches the cross-platform specification.")
+            }
+            .alert("Reset All Data?", isPresented: $showingResetAlert) {
+                Button("Delete & Start Over", role: .destructive) {
+                    DatabaseManager.shared.resetAllData()
+                    hasCompletedOnboarding = false
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will permanently clear all transactions, budgets, custom wallets, and personal settings, returning you to the fresh onboarding flow.")
             }
             .sheet(isPresented: $showingEditProfile) {
                 NavigationStack {

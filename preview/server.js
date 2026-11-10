@@ -3,7 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8088;
 const BASE_DIR = __dirname;
 
 const MIME_TYPES = {
@@ -59,3 +59,4 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`[Generative UI] Live Preview server running at http://localhost:${PORT}/`);
     console.log(`[Generative UI] Serving Android Jetpack Compose layout mirror directly.`);
 });
+

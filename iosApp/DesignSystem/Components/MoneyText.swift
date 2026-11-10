@@ -64,6 +64,7 @@ struct MoneyText: View {
             .font(style)
             .fontWeight(weight)
             .foregroundColor(color)
+            .lineLimit(1)
     }
     
     private var formattedString: String {

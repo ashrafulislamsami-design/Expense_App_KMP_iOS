@@ -188,7 +188,29 @@ struct QuickAddExpenseSheet: View {
     
     private func saveTransaction() {
         guard currentMinorUnits > 0 else { return }
-        // Save via DatabaseManager / SharedCore
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let dateStr = dateFormatter.string(from: date)
+        
+        let accountId: Int64
+        switch selectedAccount {
+        case "Cash": accountId = 1
+        case "BRAC Bank Astha": accountId = 2
+        case "bKash": accountId = 3
+        case "City Bank Card": accountId = 4
+        default: accountId = 5
+        }
+        
+        _ = DatabaseManager.shared.insertTransaction(
+            amount: currentMinorUnits,
+            type: transactionType.rawValue,
+            accountId: accountId,
+            categoryId: 1,
+            date: dateStr,
+            note: note.isEmpty ? selectedCategory : note
+        )
+        
         dismiss()
     }
 }

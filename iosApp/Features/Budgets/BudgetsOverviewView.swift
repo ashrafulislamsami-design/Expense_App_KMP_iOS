@@ -76,21 +76,21 @@ struct BudgetsOverviewView: View {
                                 Text("Total Allocated")
                                     .font(.caption2)
                                     .foregroundColor(AppColors.textSecondary)
-                                MoneyText(minorUnits: totalAllocatedMinor, currencySymbol: "৳", font: .subheadline, weight: .semibold)
+                                MoneyText(minorUnits: totalAllocatedMinor, currencySymbol: "৳", decimals: 0, font: .subheadline, weight: .semibold)
                             }
                             Spacer()
                             VStack(alignment: .center, spacing: 2) {
                                 Text("Spent So Far")
                                     .font(.caption2)
                                     .foregroundColor(AppColors.textSecondary)
-                                MoneyText(minorUnits: totalSpentMinor, currencySymbol: "৳", font: .subheadline, weight: .semibold, color: AppColors.expenseRed)
+                                MoneyText(minorUnits: totalSpentMinor, currencySymbol: "৳", decimals: 0, font: .subheadline, weight: .semibold, color: AppColors.expenseRed)
                             }
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text("Remaining")
                                     .font(.caption2)
                                     .foregroundColor(AppColors.textSecondary)
-                                MoneyText(minorUnits: totalRemainingMinor, currencySymbol: "৳", font: .subheadline, weight: .bold, color: totalRemainingMinor >= 0 ? AppColors.incomeGreen : AppColors.expenseRed)
+                                MoneyText(minorUnits: totalRemainingMinor, currencySymbol: "৳", decimals: 0, font: .subheadline, weight: .bold, color: totalRemainingMinor >= 0 ? AppColors.incomeGreen : AppColors.expenseRed)
                             }
                         }
                     }
@@ -193,17 +193,20 @@ struct BudgetRowCard: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    HStack(spacing: 4) {
-                        MoneyText(minorUnits: budget.spentMinor, currencySymbol: "৳", font: .subheadline, weight: .bold, color: budget.isOverBudget ? AppColors.expenseRed : AppColors.textPrimary)
-                        Text("/ ")
+                    HStack(spacing: 2) {
+                        MoneyText(minorUnits: budget.spentMinor, currencySymbol: "৳", decimals: 0, font: .subheadline, weight: .bold, color: budget.isOverBudget ? AppColors.expenseRed : AppColors.textPrimary)
+                        Text("/")
                             .font(.caption)
                             .foregroundColor(AppColors.textSecondary)
-                        MoneyText(minorUnits: budget.allocatedMinor, currencySymbol: "৳", font: .caption, weight: .medium, color: AppColors.textSecondary)
+                        MoneyText(minorUnits: budget.allocatedMinor, currencySymbol: "৳", decimals: 0, font: .caption, weight: .medium, color: AppColors.textSecondary)
                     }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     
                     Text(budget.isOverBudget ? "Over by ৳\(abs(budget.remainingMinor) / 100)" : "Remaining: ৳\(budget.remainingMinor / 100)")
                         .font(.caption2)
                         .foregroundColor(budget.isOverBudget ? AppColors.expenseRed : AppColors.incomeGreen)
+                        .lineLimit(1)
                 }
             }
             

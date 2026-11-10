@@ -144,6 +144,34 @@ struct TransactionsListView: View {
             .sheet(isPresented: $showingAddExpense) {
                 QuickAddExpenseSheet()
             }
+            .onAppear(perform: loadTransactions)
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DatabaseDataChanged"))) { _ in
+                loadTransactions()
+            }
+        }
+    }
+    
+    private func loadTransactions() {
+        let records = DatabaseManager.shared.fetchAllTransactions()
+        if !records.isEmpty {
+            transactions = records.map { rec in
+                let isExp = rec.type.uppercased().contains("EXP") || rec.type.contains("Debt Repayment")
+                let isInc = rec.type.uppercased().contains("INC") || rec.type.contains("Debt Inflow")
+                let filterType: TransactionItem.TransactionType = isExp ? .expense : (isInc ? .income : .transfer)
+                let signedAmount = isExp ? -abs(rec.amount) : abs(rec.amount)
+                
+                return TransactionItem(
+                    id: "\(rec.id)",
+                    title: rec.note.isEmpty ? rec.category : rec.note,
+                    category: rec.category,
+                    account: rec.account,
+                    amountMinorUnits: signedAmount,
+                    date: rec.date,
+                    icon: isExp ? "cart.fill" : (isInc ? "briefcase.fill" : "arrow.left.arrow.right"),
+                    iconColor: isExp ? .red : (isInc ? .green : .blue),
+                    type: filterType
+                )
+            }
         }
     }
     

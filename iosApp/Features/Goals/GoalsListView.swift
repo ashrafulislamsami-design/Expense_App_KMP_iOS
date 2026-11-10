@@ -39,7 +39,7 @@ struct GoalsListView: View {
                 .padding(.vertical, SpacingTokens.md)
             }
             .background(AppColors.background.ignoresSafeArea())
-            .navigationTitle("Goals & Savings Momentum")
+            .navigationTitle("Goals & Savings")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddGoal = true }) {

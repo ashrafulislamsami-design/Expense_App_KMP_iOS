@@ -174,13 +174,13 @@ class DatabaseManager {
     
     // Core Transaction Operations
     func insertTransaction(amount: Int64, type: String, accountId: Int64, categoryId: Int64?, date: String, note: String) -> Int64 {
-        return dbQueue.sync {
+        let insertedId = dbQueue.sync { () -> Int64 in
             var statement: OpaquePointer?
             let sql = """
             INSERT INTO transactions (amountMinorUnits, type, accountId, categoryId, date, note, createdAtEpochMs, updatedAtEpochMs)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?);
             """
-            var insertedId: Int64 = -1
+            var id: Int64 = -1
             if sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK {
                 let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
                 sqlite3_bind_int64(statement, 1, amount)
@@ -197,11 +197,110 @@ class DatabaseManager {
                 sqlite3_bind_int64(statement, 8, nowMs)
                 
                 if sqlite3_step(statement) == SQLITE_DONE {
-                    insertedId = sqlite3_last_insert_rowid(db)
+                    id = sqlite3_last_insert_rowid(db)
                 }
             }
             sqlite3_finalize(statement)
-            return insertedId
+            return id
+        }
+        
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name("DatabaseDataChanged"), object: nil)
+        }
+        return insertedId
+    }
+    
+    // Read Transactions
+    func fetchAllTransactions() -> [TransactionRecord] {
+        return dbQueue.sync {
+            var records: [TransactionRecord] = []
+            let sql = """
+            SELECT t.id, t.amountMinorUnits, t.type, a.name, COALESCE(c.name, 'Uncategorized'), t.date, t.note
+            FROM transactions t
+            LEFT JOIN accounts a ON t.accountId = a.id
+            LEFT JOIN categories c ON t.categoryId = c.id
+            ORDER BY t.createdAtEpochMs DESC;
+            """
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+                while sqlite3_step(stmt) == SQLITE_ROW {
+                    let id = sqlite3_column_int64(stmt, 0)
+                    let amount = sqlite3_column_int64(stmt, 1)
+                    let type = String(cString: sqlite3_column_text(stmt, 2))
+                    let account = String(cString: sqlite3_column_text(stmt, 3))
+                    let category = String(cString: sqlite3_column_text(stmt, 4))
+                    let date = String(cString: sqlite3_column_text(stmt, 5))
+                    let note = String(cString: sqlite3_column_text(stmt, 6))
+                    records.append(TransactionRecord(id: id, amount: amount, type: type, account: account, category: category, date: date, note: note))
+                }
+            }
+            sqlite3_finalize(stmt)
+            return records
         }
     }
+    
+    func fetchNetBalanceMinor() -> Int64 {
+        return dbQueue.sync {
+            var net: Int64 = 0
+            let sql = """
+            SELECT 
+                COALESCE(SUM(CASE WHEN type IN ('INCOME', 'Income', 'Debt Inflow') THEN amountMinorUnits 
+                                  WHEN type IN ('EXPENSE', 'Expense', 'Debt Repayment') THEN -amountMinorUnits 
+                                  ELSE 0 END), 0)
+            FROM transactions;
+            """
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+                if sqlite3_step(stmt) == SQLITE_ROW {
+                    net = sqlite3_column_int64(stmt, 0)
+                }
+            }
+            sqlite3_finalize(stmt)
+            return net
+        }
+    }
+    
+    func fetchTotalSpentMinor() -> Int64 {
+        return dbQueue.sync {
+            var spent: Int64 = 0
+            let sql = "SELECT COALESCE(SUM(amountMinorUnits), 0) FROM transactions WHERE type IN ('EXPENSE', 'Expense');"
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+                if sqlite3_step(stmt) == SQLITE_ROW {
+                    spent = sqlite3_column_int64(stmt, 0)
+                }
+            }
+            sqlite3_finalize(stmt)
+            return spent
+        }
+    }
+    
+    // Full Reset: Purge all data & re-seed defaults
+    func resetAllData() {
+        dbQueue.sync {
+            let wipeSql = """
+            DELETE FROM transactions;
+            DELETE FROM budgets;
+            DELETE FROM goals;
+            DELETE FROM user_settings;
+            DELETE FROM accounts;
+            DELETE FROM categories;
+            """
+            sqlite3_exec(db, wipeSql, nil, nil, nil)
+        }
+        prepopulateDefaultsIfNeeded()
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name("DatabaseDataChanged"), object: nil)
+        }
+    }
+}
+
+struct TransactionRecord: Identifiable {
+    let id: Int64
+    let amount: Int64
+    let type: String
+    let account: String
+    let category: String
+    let date: String
+    let note: String
 }
