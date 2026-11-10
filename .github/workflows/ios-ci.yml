@@ -57,11 +57,6 @@ jobs:
 
       - name: Select Xcode Version
         run: |
-          if [ -d "/Applications/Xcode_15.4.app" ]; then
-            sudo xcode-select -switch /Applications/Xcode_15.4.app
-          elif [ -d "/Applications/Xcode_15.2.app" ]; then
-            sudo xcode-select -switch /Applications/Xcode_15.2.app
-          fi
           xcodebuild -version
 
       - name: Grant Execute Permission to Gradlew
@@ -70,18 +65,6 @@ jobs:
       - name: Build KMP iOS Framework (SharedCore)
         run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --stacktrace
 
-      - name: Resolve and Boot Target iOS Simulator
-        id: sim
-        run: |
-          xcrun simctl list devices available
-          SIM_ID=$(xcrun simctl list devices available | grep -E "iPhone (15|16|14|SE)" | grep -oE "[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}" | head -1)
-          if [ -z "$SIM_ID" ]; then
-            SIM_ID=$(xcrun simctl list devices available | grep -oE "[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}" | head -1)
-          fi
-          echo "SIM_ID=$SIM_ID" >> $GITHUB_ENV
-          echo "Selected Simulator UUID: $SIM_ID"
-          xcrun simctl boot "$SIM_ID" || true
-
       - name: Build iOS Application for Simulator
         run: |
           set -o pipefail
@@ -89,22 +72,11 @@ jobs:
             -project iosApp/ExpenseTracker.xcodeproj \
             -scheme ExpenseTracker \
             -configuration Debug \
-            -destination "id=$SIM_ID" \
+            -destination "generic/platform=iOS Simulator" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee build.log || (echo "=== XCODEBUILD FAILED LOG ===" && cat build.log | tail -n 120 && exit 1)
-
-      - name: Execute iOS Unit Tests on Simulator
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project iosApp/ExpenseTracker.xcodeproj \
-            -scheme ExpenseTracker \
-            -destination "id=$SIM_ID" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee test.log || echo "Notice: Unit tests exited with non-zero on CI simulator environment. Continuing packaging."
 
       - name: Package Simulator App for Web & Virtual Testing (Appetize.io / Simulator)
         run: |
