@@ -275,6 +275,58 @@ class DatabaseManager {
         }
     }
     
+    func fetchCategorySpendingBreakdown() -> [CategoryBreakdownRecord] {
+        return dbQueue.sync {
+            var records: [CategoryBreakdownRecord] = []
+            let sql = """
+            SELECT COALESCE(c.name, 'Other'), c.colorHex, SUM(t.amountMinorUnits) as totalSpent
+            FROM transactions t
+            LEFT JOIN categories c ON t.categoryId = c.id
+            WHERE t.type IN ('EXPENSE', 'Expense')
+            GROUP BY c.name, c.colorHex
+            ORDER BY totalSpent DESC;
+            """
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+                while sqlite3_step(stmt) == SQLITE_ROW {
+                    let name = String(cString: sqlite3_column_text(stmt, 0))
+                    let hex = sqlite3_column_text(stmt, 1) != nil ? String(cString: sqlite3_column_text(stmt, 1)) : "#10B981"
+                    let amount = sqlite3_column_int64(stmt, 2)
+                    records.append(CategoryBreakdownRecord(name: name, colorHex: hex, amountMinor: amount))
+                }
+            }
+            sqlite3_finalize(stmt)
+            return records
+        }
+    }
+    
+    func fetchWalletsBalances() -> [WalletBalanceRecord] {
+        return dbQueue.sync {
+            var records: [WalletBalanceRecord] = []
+            let sql = """
+            SELECT a.name, a.colorHex, 
+                   COALESCE(SUM(CASE WHEN t.type IN ('INCOME', 'Income', 'Debt Inflow') THEN t.amountMinorUnits 
+                                     WHEN t.type IN ('EXPENSE', 'Expense', 'Debt Repayment') THEN -t.amountMinorUnits 
+                                     ELSE 0 END), a.initialBalanceMinorUnits) as currentBalance
+            FROM accounts a
+            LEFT JOIN transactions t ON a.id = t.accountId
+            GROUP BY a.id, a.name, a.colorHex
+            ORDER BY a.sortOrder ASC;
+            """
+            var stmt: OpaquePointer?
+            if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
+                while sqlite3_step(stmt) == SQLITE_ROW {
+                    let name = String(cString: sqlite3_column_text(stmt, 0))
+                    let hex = sqlite3_column_text(stmt, 1) != nil ? String(cString: sqlite3_column_text(stmt, 1)) : "#3B82F6"
+                    let bal = sqlite3_column_int64(stmt, 2)
+                    records.append(WalletBalanceRecord(name: name, colorHex: hex, balanceMinor: bal))
+                }
+            }
+            sqlite3_finalize(stmt)
+            return records
+        }
+    }
+    
     // Full Reset: Purge all data & re-seed defaults
     func resetAllData() {
         dbQueue.sync {
@@ -303,4 +355,18 @@ struct TransactionRecord: Identifiable {
     let category: String
     let date: String
     let note: String
+}
+
+struct CategoryBreakdownRecord: Identifiable {
+    var id: String { name }
+    let name: String
+    let colorHex: String
+    let amountMinor: Int64
+}
+
+struct WalletBalanceRecord: Identifiable {
+    var id: String { name }
+    let name: String
+    let colorHex: String
+    let balanceMinor: Int64
 }

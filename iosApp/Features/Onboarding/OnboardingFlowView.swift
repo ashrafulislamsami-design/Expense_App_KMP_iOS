@@ -22,6 +22,10 @@ struct OnboardingFlowView: View {
     @State private var profileNameInput: String = "User"
     @State private var selectedAvatarEmoji: String = "🧑‍💻"
     
+    @AppStorage("monthlyIncomeMinor") private var storedIncomeMinor: Int = 5000000
+    @AppStorage("monthlyBudgetMinor") private var storedBudgetMinor: Int = 3500000
+    @AppStorage("salaryPayday") private var storedSalaryPayday: Int = 1
+    @AppStorage("cycleSpentMinor") private var storedCycleSpentMinor: Int = 0
     // Form States
     @State private var selectedWallets: Set<String> = ["Cash", "BRAC Bank Astha", "bKash", "Card"]
     @State private var customWalletName: String = ""
@@ -460,6 +464,52 @@ struct OnboardingFlowView: View {
             userName = profileNameInput.trimmingCharacters(in: .whitespaces)
         }
         userAvatar = selectedAvatarEmoji
+        
+        let incClean = monthlyIncome.replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+        let budClean = monthlyBudget.replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+        let spentClean = alreadySpentThisCycle.replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+        
+        let incMinor = (Int(incClean) ?? 50000) * 100
+        let budMinor = (Int(budClean) ?? 35000) * 100
+        let spentMinor = (Int(spentClean) ?? 0) * 100
+        
+        storedIncomeMinor = incMinor
+        storedBudgetMinor = budMinor
+        storedSalaryPayday = selectedPayDay
+        storedCycleSpentMinor = spentMinor
+        
+        // If the user entered an initial spend during onboarding, record it in SQLite
+        if spentMinor > 0 {
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            _ = DatabaseManager.shared.insertTransaction(
+                amount: Int64(spentMinor),
+                type: "Expense",
+                accountId: 1, // Default primary account
+                categoryId: 1,
+                date: df.string(from: Date()),
+                note: "Cycle Initial Spend"
+            )
+        }
+        
+        // Also record salary income baseline so net balance is accurate
+        if incMinor > 0 {
+            let df = DateFormatter()
+            df.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            _ = DatabaseManager.shared.insertTransaction(
+                amount: Int64(incMinor),
+                type: "Income",
+                accountId: 2, // Bank Account
+                categoryId: 14, // Salary
+                date: df.string(from: Date()),
+                note: "Monthly Salary Baseline"
+            )
+        }
+        
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name("DatabaseDataChanged"), object: nil)
+        }
+        
         if isPresentedAsSheet {
             dismiss()
         } else {

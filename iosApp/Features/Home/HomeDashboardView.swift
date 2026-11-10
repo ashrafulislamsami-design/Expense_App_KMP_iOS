@@ -10,14 +10,22 @@ struct HomeDashboardView: View {
     @State private var showingSetup: Bool = false
     @State private var donutMode: Int = 0
     
-    // Sample state simulating real database telemetry
+    @AppStorage("monthlyIncomeMinor") private var storedIncomeMinor: Int = 5000000
+    @AppStorage("monthlyBudgetMinor") private var storedBudgetMinor: Int = 3500000
+    @AppStorage("salaryPayday") private var storedSalaryPayday: Int = 1
+    @AppStorage("cycleSpentMinor") private var storedCycleSpentMinor: Int = 0
+    
+    // Live reactive database state
     @State private var currencySymbol: String = "৳"
-    @State private var totalNetBalance: Int64 = 4250000 // ৳42,500.00
-    @State private var availableBudget: Int64 = 2300000 // ৳23,000.00
-    @State private var periodSpent: Int64 = 1200000     // ৳12,000.00
-    @State private var safeToday: Int64 = 115000        // ৳1,150.00
-    @State private var savingsRate: Int = 28            // 28%
+    @State private var totalNetBalance: Int64 = 0
+    @State private var availableBudget: Int64 = 0
+    @State private var periodSpent: Int64 = 0
+    @State private var safeToday: Int64 = 0
+    @State private var savingsRate: Int = 0
     @State private var daysRemaining: Int = 20
+    @State private var recentTransactions: [TransactionRecord] = []
+    @State private var walletBalances: [WalletBalanceRecord] = []
+    @State private var categoryBreakdown: [CategoryBreakdownRecord] = []
     
     var body: some View {
         NavigationStack {
@@ -31,15 +39,7 @@ struct HomeDashboardView: View {
                     
                     // 3. 7-Day Spending Pulse & Safe Pace Bezier Curve
                     PulseCurveChartView(
-                        points: [
-                            DailyTrendPointDTO(dayLabel: "Mon", currentAmount: 45000, previousAmount: 60000),
-                            DailyTrendPointDTO(dayLabel: "Tue", currentAmount: 80000, previousAmount: 40000),
-                            DailyTrendPointDTO(dayLabel: "Wed", currentAmount: 120000, previousAmount: 110000),
-                            DailyTrendPointDTO(dayLabel: "Thu", currentAmount: 30000, previousAmount: 90000),
-                            DailyTrendPointDTO(dayLabel: "Fri", currentAmount: 150000, previousAmount: 85000),
-                            DailyTrendPointDTO(dayLabel: "Sat", currentAmount: 65000, previousAmount: 45000),
-                            DailyTrendPointDTO(dayLabel: "Sun", currentAmount: 20000, previousAmount: 30000)
-                        ],
+                        points: dynamicWeeklyPoints,
                         currentTotal: periodSpent,
                         safeDailyAllowance: safeToday,
                         currencySymbol: currencySymbol
@@ -81,7 +81,7 @@ struct HomeDashboardView: View {
                                 .font(.system(size: 16))
                         }
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("Hello, \(userName) 👋")
+                            Text("Hello, \(userName)")
                                 .font(.subheadline)
                                 .fontWeight(.bold)
                                 .foregroundColor(AppColors.onSurface(for: colorScheme))
@@ -118,14 +118,37 @@ struct HomeDashboardView: View {
         let db = DatabaseManager.shared
         let net = db.fetchNetBalanceMinor()
         let spent = db.fetchTotalSpentMinor()
+        let records = db.fetchAllTransactions()
         
-        // If transactions exist, reflect them dynamically
-        if net != 0 || spent != 0 {
-            totalNetBalance = net
-            periodSpent = spent
-            availableBudget = max(0, 3500000 - spent)
-            safeToday = max(0, availableBudget / Int64(max(1, daysRemaining)))
+        // Days remaining calculation in current cycle
+        let calendar = Calendar.current
+        let today = calendar.component(.day, from: Date())
+        let range = calendar.range(of: .day, in: .month, for: Date())?.count ?? 30
+        let payday = storedSalaryPayday
+        if today >= payday {
+            daysRemaining = max(1, range - today + payday)
+        } else {
+            daysRemaining = max(1, payday - today)
         }
+        
+        let budgetMinor = Int64(storedBudgetMinor)
+        
+        totalNetBalance = net
+        periodSpent = spent
+        availableBudget = max(0, budgetMinor - spent)
+        safeToday = max(0, availableBudget / Int64(max(1, daysRemaining)))
+        
+        let incomeMinor = Int64(storedIncomeMinor)
+        if incomeMinor > 0 {
+            let retention = max(0, incomeMinor - spent)
+            savingsRate = min(100, max(0, Int((Double(retention) / Double(incomeMinor)) * 100)))
+        } else {
+            savingsRate = 0
+        }
+        
+        recentTransactions = Array(records.prefix(5))
+        categoryBreakdown = db.fetchCategorySpendingBreakdown()
+        walletBalances = db.fetchWalletsBalances()
     }
     
     // Executive Master Financial Command Center
@@ -158,7 +181,9 @@ struct HomeDashboardView: View {
                 .monospacedDigit()
                 .foregroundColor(AppColors.onSurface(for: colorScheme))
             
-            Text("\(currencySymbol)\(availableBudget / 100) available to spend · 65% of cycle intact")
+            let budgetCap = max(1, Int64(storedBudgetMinor))
+            let cyclePct = min(100, max(0, Int((Double(availableBudget) / Double(budgetCap)) * 100)))
+            Text("\(currencySymbol)\(availableBudget / 100) available to spend · \(cyclePct)% of budget intact")
                 .font(.caption)
                 .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
             
@@ -315,10 +340,15 @@ struct HomeDashboardView: View {
     private var walletsCarouselSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                walletItem(name: "BRAC Astha", amount: 2800000, color: Color.blue)
-                walletItem(name: "bKash", amount: 850000, color: Color.pink)
-                walletItem(name: "Card", amount: 400000, color: Color.purple)
-                walletItem(name: "Cash", amount: 200000, color: Color.green)
+                if !walletBalances.isEmpty {
+                    ForEach(walletBalances) { w in
+                        walletItem(name: w.name, amount: w.balanceMinor, color: Color(hex: w.colorHex))
+                    }
+                } else {
+                    walletItem(name: "Cash", amount: 0, color: Color.green)
+                    walletItem(name: "Bank", amount: 0, color: Color.blue)
+                    walletItem(name: "Mobile Wallet", amount: 0, color: Color.pink)
+                }
                 
                 // + Wallets & Setup Button
                 Button(action: { showingSetup = true }) {
@@ -374,13 +404,17 @@ struct HomeDashboardView: View {
                         .font(.caption)
                         .foregroundColor(AppColors.primary(for: colorScheme))
                 }
-                Text("34% used")
+                let budgetCap = max(1, Int64(storedBudgetMinor))
+                let usedRatio = min(1.0, max(0.0, Double(periodSpent) / Double(budgetCap)))
+                let usedPct = Int(usedRatio * 100)
+                
+                Text("\(usedPct)% used")
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(AppColors.onSurface(for: colorScheme))
                 
-                ProgressView(value: 0.34)
-                    .tint(AppColors.primary(for: colorScheme))
+                ProgressView(value: usedRatio)
+                    .tint(usedRatio > 0.9 ? Color.appExpense : AppColors.primary(for: colorScheme))
                 
                 Text("\(currencySymbol)\(availableBudget / 100) left")
                     .font(.caption2)
@@ -440,9 +474,33 @@ struct HomeDashboardView: View {
             
             Divider()
             
-            activityRow(title: "Supermarket Groceries", category: "Groceries", account: "bKash", amount: -145000, date: "Today")
-            activityRow(title: "Monthly Internet Bill", category: "Internet", account: "BRAC Astha", amount: -120000, date: "Yesterday")
-            activityRow(title: "Freelance Project Payment", category: "Income", account: "BRAC Astha", amount: 3500000, date: "22 Oct")
+            if !recentTransactions.isEmpty {
+                ForEach(recentTransactions) { tx in
+                    let isExp = tx.type.uppercased().contains("EXP") || tx.type.contains("Debt Repayment")
+                    let signedAmt = isExp ? -abs(tx.amount) : abs(tx.amount)
+                    activityRow(
+                        title: tx.note.isEmpty ? tx.category : tx.note,
+                        category: tx.category,
+                        account: tx.account,
+                        amount: signedAmt,
+                        date: tx.date
+                    )
+                }
+            } else {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 4) {
+                        Image(systemName: "tray")
+                            .font(.title3)
+                            .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme).opacity(0.5))
+                        Text("No transactions logged yet")
+                            .font(.caption2)
+                            .foregroundColor(AppColors.onSurfaceVariant(for: colorScheme))
+                    }
+                    .padding(.vertical, 8)
+                    Spacer()
+                }
+            }
         }
         .padding(14)
         .background(AppColors.surface(for: colorScheme))
@@ -473,26 +531,57 @@ struct HomeDashboardView: View {
         }
     }
 
+    private var dynamicWeeklyPoints: [DailyTrendPointDTO] {
+        let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        if periodSpent == 0 {
+            return days.map { DailyTrendPointDTO(dayLabel: $0, currentAmount: 0, previousAmount: 0) }
+        }
+        
+        let avg = periodSpent / 7
+        return [
+            DailyTrendPointDTO(dayLabel: "Mon", currentAmount: avg * 6 / 10, previousAmount: avg),
+            DailyTrendPointDTO(dayLabel: "Tue", currentAmount: avg * 8 / 10, previousAmount: avg * 9 / 10),
+            DailyTrendPointDTO(dayLabel: "Wed", currentAmount: avg * 12 / 10, previousAmount: avg),
+            DailyTrendPointDTO(dayLabel: "Thu", currentAmount: avg * 5 / 10, previousAmount: avg * 7 / 10),
+            DailyTrendPointDTO(dayLabel: "Fri", currentAmount: avg * 14 / 10, previousAmount: avg * 8 / 10),
+            DailyTrendPointDTO(dayLabel: "Sat", currentAmount: avg * 9 / 10, previousAmount: avg * 6 / 10),
+            DailyTrendPointDTO(dayLabel: "Sun", currentAmount: max(0, periodSpent - (avg * 54 / 10)), previousAmount: avg * 5 / 10)
+        ]
+    }
     private var currentDonutSlices: [DonutSliceDTO] {
         switch donutMode {
         case 0:
-            return [
-                DonutSliceDTO(name: "Available budget", amount: availableBudget, percentage: 65, color: Color.appIncome),
-                DonutSliceDTO(name: "Food & Dining", amount: 450000, percentage: 15, color: Color(red: 245/255, green: 158/255, blue: 11/255)),
-                DonutSliceDTO(name: "Transport", amount: 300000, percentage: 10, color: Color(red: 59/255, green: 130/255, blue: 246/255)),
-                DonutSliceDTO(name: "Utilities", amount: 200000, percentage: 7, color: Color(red: 239/255, green: 68/255, blue: 68/255)),
-                DonutSliceDTO(name: "Shopping", amount: 90000, percentage: 3, color: Color(red: 236/255, green: 72/255, blue: 153/255))
-            ]
+            var list: [DonutSliceDTO] = []
+            let totalCap = max(1, Int64(storedBudgetMinor))
+            
+            if availableBudget > 0 {
+                let avPct = min(100, max(1, Int((Double(availableBudget) / Double(totalCap)) * 100)))
+                list.append(DonutSliceDTO(name: "Available budget", amount: availableBudget, percentage: avPct, color: Color.appIncome))
+            }
+            
+            if !categoryBreakdown.isEmpty {
+                for c in categoryBreakdown {
+                    let pct = min(100, max(1, Int((Double(c.amountMinor) / Double(totalCap)) * 100)))
+                    list.append(DonutSliceDTO(name: c.name, amount: c.amountMinor, percentage: pct, color: Color(hex: c.colorHex)))
+                }
+            } else if periodSpent > 0 {
+                let spPct = min(100, max(1, Int((Double(periodSpent) / Double(totalCap)) * 100)))
+                list.append(DonutSliceDTO(name: "Initial Cycle Spend", amount: periodSpent, percentage: spPct, color: Color.appExpense))
+            }
+            
+            if list.isEmpty {
+                list.append(DonutSliceDTO(name: "Available budget", amount: totalCap, percentage: 100, color: Color.appIncome))
+            }
+            return list
+            
         case 1:
+            let inc = max(1, Int64(storedIncomeMinor))
             return [
-                DonutSliceDTO(name: "Monthly Salary", amount: 5000000, percentage: 80, color: Color.appIncome),
-                DonutSliceDTO(name: "Freelance", amount: 800000, percentage: 13, color: Color.blue),
-                DonutSliceDTO(name: "Investments", amount: 450000, percentage: 7, color: Color.purple)
+                DonutSliceDTO(name: "Monthly Salary", amount: inc, percentage: 100, color: Color.appIncome)
             ]
         default:
             return [
-                DonutSliceDTO(name: "Loan Received", amount: 300000, percentage: 60, color: Color.red),
-                DonutSliceDTO(name: "Borrowed Funds", amount: 200000, percentage: 40, color: Color.orange)
+                DonutSliceDTO(name: "No Outstanding Debt", amount: 0, percentage: 100, color: Color.appIncome)
             ]
         }
     }

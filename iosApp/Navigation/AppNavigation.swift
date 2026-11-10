@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AppNavigation: View {
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selectedTab: TabItem = .home
     @State private var showingQuickAdd: Bool = false
     
@@ -44,6 +45,6 @@ struct AppNavigation: View {
                 }
                 .tag(TabItem.settings)
         }
-        .tint(AppColors.brandPrimary)
+        .tint(AppColors.primary(for: colorScheme))
     }
 }
