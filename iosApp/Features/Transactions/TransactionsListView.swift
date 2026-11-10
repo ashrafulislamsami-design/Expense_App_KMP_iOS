@@ -165,7 +165,7 @@ struct TransactionsListView: View {
                     title: rec.note.isEmpty ? rec.category : rec.note,
                     category: rec.category,
                     account: rec.account,
-                    amountMinorUnits: signedAmount,
+                    amountMinor: signedAmount,
                     date: rec.date,
                     icon: isExp ? "cart.fill" : (isInc ? "briefcase.fill" : "arrow.left.arrow.right"),
                     iconColor: isExp ? .red : (isInc ? .green : .blue),
